@@ -15,13 +15,13 @@ export const accountTable = table({
   // auto-prepends the engine's `gin(xdo)` index in canonical order.
   useXdo: true,
   tags: ["xano:quick-start"],
+  // All three columns are name-`?` in the source: required:false, nullable:false.
   schema: {
-    name: f.text({ nullable: true, methods: ["trim"], description: "The name of the company." }),
+    name: f.text({ methods: ["trim"], description: "The name of the company." }),
     description: f.text({
-      nullable: true,
       methods: ["trim"],
       description: "A brief description of the company.",
     }),
-    location: f.text({ nullable: true, methods: ["trim"] }),
+    location: f.text({ methods: ["trim"] }),
   },
 });

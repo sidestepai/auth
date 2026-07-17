@@ -19,23 +19,20 @@ export const eventLogTable = table({
   auth: false,
   useXdo: true,
   tags: ["xano:quick-start"],
+  // All four columns are name-`?` in the source: required:false, nullable:false.
   schema: {
     user_id: f.tableRef(userTable, {
-      nullable: true,
       description: "Reference to the user who performed the action.",
     }),
     account_id: f.tableRef(accountTable, {
-      nullable: true,
       description: "Reference to the company associated with the user event.",
     }),
     action: f.text({
-      nullable: true,
       methods: ["trim"],
       description:
         "A description of the action performed by the user (e.g., 'login', 'created_invoice', 'updated_profile').",
     }),
     metadata: f.json({
-      nullable: true,
       description:
         "Additional data related to the event, such as resource IDs, old/new values, or other contextual information.",
     }),

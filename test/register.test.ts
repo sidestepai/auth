@@ -73,6 +73,18 @@ describe("registerAuth (turnkey install)", () => {
   });
 });
 
+describe("consumer workspace with use_xdo:true", () => {
+  it("does not flip the user table's pinned storage mode", () => {
+    type Dbo = { name: string; use_xdo: boolean; index: Array<{ type: string }> };
+    const bundle = registerAuth(
+      new Xano().registerWorkspace({ name: "consumer-app", use_xdo: true }),
+    ).export() as unknown as { payload: { dbo: Dbo[] } };
+    const user = bundle.payload.dbo.find((d) => d.name === "user");
+    expect(user?.use_xdo).toBe(false);
+    expect(user?.index.some((i) => i.type === "gin")).toBe(false);
+  });
+});
+
 describe("granular registration", () => {
   it("a cherry-picked subset (login only) exports cleanly", () => {
     const bundle = freshInstance()

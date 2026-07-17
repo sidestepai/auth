@@ -15,28 +15,33 @@ export const userTable = table({
   guid: "CX-2L9cgEG4o9AkPNkWJK792tWs",
   description: "Stores user information and allows the user to authenticate  against",
   auth: true,
+  // Pinned: a table without an explicit useXdo inherits the CONSUMER workspace's
+  // use_xdo at export, which would silently flip the auth table's storage mode.
+  useXdo: false,
   tags: ["xano:quick-start"],
+  // Flag semantics (per the engine's schema-table fixtures): a bare column name
+  // in XanoScript means required:true; `?` on the name means required:false;
+  // `?` on the type means nullable:true.
   schema: {
-    name: f.text({ methods: ["trim"] }),
-    email: f.email({ nullable: true, methods: ["trim", "lower"] }),
+    name: f.text({ required: true, methods: ["trim"] }),
+    email: f.email({ required: true, nullable: true, methods: ["trim", "lower"] }),
     // f.password defaults to access:"internal" — matching the source's hidden hash.
-    password: f.password({ nullable: true, methods: ["min:8", "minAlpha:1", "minDigit:1"] }),
-    account_id: f.tableRef(accountTable, {
+    password: f.password({
+      required: true,
       nullable: true,
+      methods: ["min:8", "minAlpha:1", "minDigit:1"],
+    }),
+    account_id: f.tableRef(accountTable, {
       description: "Reference to the company the user belongs to.",
     }),
     role: f.enum(["admin", "member"], {
-      nullable: true,
       description: "The role of the user within their company (e.g., 'admin', 'member').",
     }),
-    password_reset: f.object(
-      {
-        token: f.password({ nullable: true }),
-        expiration: f.timestamp({ nullable: true }),
-        used: f.bool({ nullable: true }),
-      },
-      { nullable: true },
-    ),
+    password_reset: f.object({
+      token: f.password(),
+      expiration: f.timestamp({ nullable: true }),
+      used: f.bool(),
+    }),
   },
   index: [{ type: "btree|unique", fields: [{ name: "email", op: "asc" }] }],
 });

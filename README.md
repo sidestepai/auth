@@ -113,6 +113,10 @@ preserved on purpose — changing them here would fork the template's behavior:
 - **`event_log.metadata` contains password hashes.** Signup and login log the
   full fetched user record — including the hash — into `event_log`. Treat
   `event_log` with the same access and retention discipline as `user` itself.
+- **Request history records plaintext credentials.** Xano's request history
+  defaults ON for query endpoints, so signup/login request bodies (plaintext
+  passwords) and minted `authToken`s are captured in history. Disable history
+  on the Authentication group, or scope who can read it, before production.
 - **Every endpoint writes an event-log row** — including the `auth/me` GET.
   The table grows unbounded; there is no pruning or retention mechanism. You
   own its lifecycle.

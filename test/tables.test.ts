@@ -31,15 +31,23 @@ describe("user table", () => {
     expect(u.tag).toEqual(QUICK_START_TAG);
   });
 
-  it("carries the source's column set, nullability, and filters", () => {
+  it("carries the source's column set, required/nullable flags, and filters", () => {
     expect(u.schema.map((c) => c.name)).toEqual([
       "id", "created_at", "name", "email", "password", "account_id", "role", "password_reset",
     ]);
-    expect(col(u, "name").nullable).toBe(false);
+    // Engine `?` semantics: bare name → required; name-`?` → optional; type-`?` → nullable.
+    expect(u.schema.map((c) => [c.name, c.required, c.nullable])).toEqual([
+      ["id", true, false],
+      ["created_at", false, false],
+      ["name", true, false],
+      ["email", true, true],
+      ["password", true, true],
+      ["account_id", false, false],
+      ["role", false, false],
+      ["password_reset", false, false],
+    ]);
     expect(methodNames(col(u, "name"))).toEqual(["trim"]);
-    expect(col(u, "email").nullable).toBe(true);
     expect(methodNames(col(u, "email"))).toEqual(["trim", "lower"]);
-    expect(col(u, "password").nullable).toBe(true);
     expect(methodNames(col(u, "password"))).toEqual(["min:8", "minAlpha:1", "minDigit:1"]);
   });
 
@@ -50,7 +58,6 @@ describe("user table", () => {
 
   it("links account_id to the ported account table (deviation from the dangling source ref)", () => {
     expect(methodNames(col(u, "account_id"))).toEqual([`@:dbo=${GUIDS.account}`]);
-    expect(col(u, "account_id").nullable).toBe(true);
   });
 
   it("carries the role enum and password_reset object", () => {
@@ -59,9 +66,9 @@ describe("user table", () => {
     const reset = col(u, "password_reset");
     expect(reset.type).toBe("obj");
     expect(children(reset).map((c) => [c.name, c.type, c.nullable])).toEqual([
-      ["token", "password", true],
+      ["token", "password", false],
       ["expiration", "epochms", true],
-      ["used", "bool", true],
+      ["used", "bool", false],
     ]);
   });
 
@@ -106,6 +113,17 @@ describe("account and event_log tables", () => {
     expect(col(e, "action").type).toBe("text");
     expect(methodNames(col(e, "action"))).toEqual(["trim"]);
     expect(col(e, "metadata").type).toBe("json");
+  });
+
+  it("declared columns are optional and non-nullable (name-`?` source semantics)", () => {
+    for (const [t, names] of [
+      [a, ["name", "description", "location"]],
+      [e, ["user_id", "account_id", "action", "metadata"]],
+    ] as const) {
+      for (const name of names) {
+        expect([name, col(t, name).required, col(t, name).nullable]).toEqual([name, false, false]);
+      }
+    }
   });
 });
 
