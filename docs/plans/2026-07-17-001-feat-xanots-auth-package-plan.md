@@ -1,7 +1,7 @@
 ---
 title: "feat: xanots-auth plug-and-play authentication package"
 type: feat
-status: active
+status: completed
 date: 2026-07-17
 ---
 
