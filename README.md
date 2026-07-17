@@ -28,16 +28,6 @@ xts-auth release documents its tested peer.)
 
 ## Quickstart
 
-Pick your situation first:
-
-- **Fresh workspace** — proceed below; the import creates all objects.
-- **Workspace that already has Xano's quick-start template** — the import
-  *upgrades those same objects in place* (identities are guid-pinned). Any
-  hand-edits you made to the template's auth objects **will be replaced**.
-- **Workspace with its own `user` table (not from the quick-start)** — stop:
-  your table has a different guid, so the import would create a *second* table
-  named `user`. Don't import this package into such a workspace.
-
 ```ts
 // xano/index.ts
 import { workspace } from "xanots";
@@ -50,8 +40,27 @@ export default registerAuth(workspace("my-app"));
 npx xanots export   # → importable workspace bundle
 ```
 
-Import the bundle into your Xano workspace; the endpoints are then live at
-`<instanceUrl>/api:QC35j52Y/auth/signup`, `/auth/login`, and `/auth/me`.
+Import the bundle into your Xano workspace. The endpoints are served under the
+Authentication group's canonical — `<instanceUrl>/api:<canonical>/auth/signup`,
+`/auth/login`, `/auth/me` — where `<canonical>` is the URL segment your
+`xano.lock` minted for the group (see **Identity & the lock** below).
+
+## Identity & the lock
+
+This package pins **no** object guids and **no** canonical. Identity comes from
+the consuming project, in one of two ways:
+
+- **With `xano.lock` (recommended):** on your first locked export the lock mints
+  and freezes a guid for every object and a canonical for the Authentication
+  group, then reuses them on every subsequent export. That makes repeated
+  imports idempotent (same lock → same identities → updates in place, never
+  duplicates) and keeps your API URL stable. Commit `xano.lock`.
+- **Without a lock:** each object's guid derives deterministically from its name
+  (`md5("<kind>:<name>")`), and the engine assigns the group a random canonical
+  at import time. Fine for a one-shot import; use a lock if you re-import.
+
+Because references resolve through the same derivation, the queries bind to the
+tables and function correctly under either path — no manual guid wiring.
 
 Cherry-picking instead of the turnkey install works too — every def is a named
 export (`userTable`, `accountTable`, `eventLogTable`, `createEventLogFn`,
@@ -128,13 +137,16 @@ preserved on purpose — changing them here would fork the template's behavior:
   template behavior; login's failures are indistinguishable.
 - **Exactly one auth table.** Registering another `auth: true` table makes
   `export()` throw.
-- **Quick-start branding is visible.** Objects keep their source names and
+- **Quick-start naming is visible.** Objects keep their source names and
   `xano:quick-start` tags — you'll see "Getting Started Template/
   create_event_log" in your workspace even if you never installed the
-  template. This is what makes upgrade-in-place idempotent.
-- **Canonical collisions self-heal.** Two workspaces on one instance importing
-  canonical `QC35j52Y` — the engine assigns the second a new URL token;
-  endpoint paths keep working, just under a different `api:` segment.
+  template. Rename them in your own fork if that's confusing; the guids are not
+  pinned, so a rename just changes the name-derived identity (pin it in your
+  lock first if you've already imported).
+- **Your API URL depends on the lock.** The Authentication group's canonical
+  (the `/api:<canonical>/` path segment) is minted by your `xano.lock`, or
+  randomized by the engine if you import without one. Commit the lock to keep
+  the URL stable across re-imports.
 
 ## Versioning
 

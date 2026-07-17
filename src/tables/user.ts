@@ -12,7 +12,6 @@ import { accountTable } from "./account.js";
 
 export const userTable = table({
   name: "user",
-  guid: "CX-2L9cgEG4o9AkPNkWJK792tWs",
   description: "Stores user information and allows the user to authenticate  against",
   auth: true,
   // Pinned: a table without an explicit useXdo inherits the CONSUMER workspace's

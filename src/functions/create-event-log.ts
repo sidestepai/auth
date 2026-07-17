@@ -1,15 +1,14 @@
 /**
  * `Getting Started Template/create_event_log` — writes one row into
  * `event_log`. Ported 1:1 from the quick-start template; the namespaced source
- * name and explicit guid are kept verbatim so quick-start workspaces upgrade
- * in place (port-specific choice — new extensions should use their own names).
+ * name is kept verbatim (it seeds the derived guid). Identity is left to the
+ * consumer's `xano.lock` or the deterministic name-derivation.
  */
 import { defineFunction, input, s, c, inp } from "xanots";
 import { eventLogTable } from "../tables/event-log.js";
 
 export const createEventLogFn = defineFunction({
   name: "Getting Started Template/create_event_log",
-  guid: "R_0tL5hQFC0aQrgi0qcbjhsMxhE",
   description: "Creates a record in the event log table",
   tags: ["xano:quick-start"],
   input: {

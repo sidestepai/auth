@@ -275,7 +275,7 @@
                 "name": "@",
                 "disabled": false,
                 "arg": [
-                  "dbo=nrR_wBVyH9n79trtWn3pnug7-2c"
+                  "dbo=f2f78af06c7c59b550823db5edae97bc"
                 ]
               }
             ],
@@ -540,7 +540,7 @@
           "version": 0,
           "guid": ""
         },
-        "guid": "CX-2L9cgEG4o9AkPNkWJK792tWs",
+        "guid": "efb558104909137dac95907814c26051",
         "import": {
           "mode": "standard"
         }
@@ -819,7 +819,7 @@
           "version": 0,
           "guid": ""
         },
-        "guid": "nrR_wBVyH9n79trtWn3pnug7-2c",
+        "guid": "f2f78af06c7c59b550823db5edae97bc",
         "import": {
           "mode": "standard"
         }
@@ -935,7 +935,7 @@
                 "name": "@",
                 "disabled": false,
                 "arg": [
-                  "dbo=CX-2L9cgEG4o9AkPNkWJK792tWs"
+                  "dbo=efb558104909137dac95907814c26051"
                 ]
               }
             ],
@@ -979,7 +979,7 @@
                 "name": "@",
                 "disabled": false,
                 "arg": [
-                  "dbo=nrR_wBVyH9n79trtWn3pnug7-2c"
+                  "dbo=f2f78af06c7c59b550823db5edae97bc"
                 ]
               }
             ],
@@ -1138,7 +1138,7 @@
           "version": 0,
           "guid": ""
         },
-        "guid": "NWjNSptneQ5Gs3PBGX3KY3gZ8Fo",
+        "guid": "e9148697952846994def7eb0a467d6cd",
         "import": {
           "mode": "standard"
         }
@@ -1399,7 +1399,7 @@
             },
             "context": {
               "dbo": {
-                "id": "NWjNSptneQ5Gs3PBGX3KY3gZ8Fo"
+                "id": "e9148697952846994def7eb0a467d6cd"
               }
             },
             "runtime": null,
@@ -1417,7 +1417,7 @@
         "shared_workspace": {
           "is_shared": false
         },
-        "guid": "R_0tL5hQFC0aQrgi0qcbjhsMxhE"
+        "guid": "19bb274c20b194d7fa03ca4bafb3ac4c"
       }
     ],
     "middleware": [],
@@ -1434,7 +1434,7 @@
         "verb": "POST",
         "disabled": false,
         "app": {
-          "id": "Cr35df6IaPGaULJaUKfBjGjSu78"
+          "id": "418bb3d99f5c721ab78c30d97d651e90"
         },
         "cache": {
           "active": false,
@@ -1645,7 +1645,7 @@
             },
             "context": {
               "dbo": {
-                "id": "CX-2L9cgEG4o9AkPNkWJK792tWs"
+                "id": "efb558104909137dac95907814c26051"
               }
             },
             "runtime": null,
@@ -1761,7 +1761,7 @@
             },
             "context": {
               "dbo": {
-                "id": "CX-2L9cgEG4o9AkPNkWJK792tWs"
+                "id": "efb558104909137dac95907814c26051"
               }
             },
             "runtime": null,
@@ -1777,7 +1777,7 @@
             "input": [
               {
                 "name": "dbtable",
-                "value": "CX-2L9cgEG4o9AkPNkWJK792tWs",
+                "value": "efb558104909137dac95907814c26051",
                 "tag": "const",
                 "filters": [],
                 "ignore": false,
@@ -1875,7 +1875,7 @@
             },
             "context": {
               "function": {
-                "id": "R_0tL5hQFC0aQrgi0qcbjhsMxhE"
+                "id": "19bb274c20b194d7fa03ca4bafb3ac4c"
               }
             },
             "runtime": null,
@@ -1891,7 +1891,7 @@
           "version": 0,
           "guid": ""
         },
-        "guid": "VWl1Tdrrm17hR5zrCvkA-W-zcyE"
+        "guid": "f7061bf8bbe1ea47953dd4c437475f3f"
       },
       {
         "name": "auth/login",
@@ -1903,7 +1903,7 @@
         "verb": "POST",
         "disabled": false,
         "app": {
-          "id": "Cr35df6IaPGaULJaUKfBjGjSu78"
+          "id": "418bb3d99f5c721ab78c30d97d651e90"
         },
         "cache": {
           "active": false,
@@ -2107,7 +2107,7 @@
             },
             "context": {
               "dbo": {
-                "id": "CX-2L9cgEG4o9AkPNkWJK792tWs"
+                "id": "efb558104909137dac95907814c26051"
               }
             },
             "runtime": null,
@@ -2256,7 +2256,7 @@
             "input": [
               {
                 "name": "dbtable",
-                "value": "CX-2L9cgEG4o9AkPNkWJK792tWs",
+                "value": "efb558104909137dac95907814c26051",
                 "tag": "const",
                 "filters": [],
                 "ignore": false,
@@ -2354,7 +2354,7 @@
             },
             "context": {
               "function": {
-                "id": "R_0tL5hQFC0aQrgi0qcbjhsMxhE"
+                "id": "19bb274c20b194d7fa03ca4bafb3ac4c"
               }
             },
             "runtime": null,
@@ -2370,19 +2370,19 @@
           "version": 0,
           "guid": ""
         },
-        "guid": "MQN7cCfXwpnM3BRYA8NBSOB48kI"
+        "guid": "b1bc1b890bbf4857097ff1f4a79c19b1"
       },
       {
         "name": "auth/me",
         "description": "Get the user record belonging to the authentication token",
         "docs": "",
         "api_enabled": true,
-        "auth": "CX-2L9cgEG4o9AkPNkWJK792tWs",
+        "auth": "efb558104909137dac95907814c26051",
         "response_type": "standard",
         "verb": "GET",
         "disabled": false,
         "app": {
-          "id": "Cr35df6IaPGaULJaUKfBjGjSu78"
+          "id": "418bb3d99f5c721ab78c30d97d651e90"
         },
         "cache": {
           "active": false,
@@ -2490,7 +2490,7 @@
             },
             "context": {
               "dbo": {
-                "id": "CX-2L9cgEG4o9AkPNkWJK792tWs"
+                "id": "efb558104909137dac95907814c26051"
               }
             },
             "runtime": null,
@@ -2549,7 +2549,7 @@
             },
             "context": {
               "function": {
-                "id": "R_0tL5hQFC0aQrgi0qcbjhsMxhE"
+                "id": "19bb274c20b194d7fa03ca4bafb3ac4c"
               }
             },
             "runtime": null,
@@ -2565,7 +2565,7 @@
           "version": 0,
           "guid": ""
         },
-        "guid": "aeu1-p-UhWY0Ymg2QE8xjSDdVKs"
+        "guid": "1d7d81c2d3319d6fb36d84d9c9aa9e61"
       }
     ],
     "tool": [],
@@ -2574,7 +2574,7 @@
       {
         "name": "Authentication",
         "description": "This group provides endpoints for user login, signup, and reset password, returning authentication tokens and user records.",
-        "canonical": "QC35j52Y",
+        "canonical": "",
         "swagger": false,
         "api_group_enabled": true,
         "docs": "",
@@ -2613,7 +2613,7 @@
             "put": false
           }
         },
-        "guid": "Cr35df6IaPGaULJaUKfBjGjSu78"
+        "guid": "418bb3d99f5c721ab78c30d97d651e90"
       }
     ],
     "vault": [],
@@ -2625,5 +2625,5 @@
     "service": [],
     "branch": []
   },
-  "sig": "YDqElNKllpstIqJlJoUJ_r9WwwY."
+  "sig": "Ie-xA2WSKys05CnSGTAbzLYzOOw."
 }

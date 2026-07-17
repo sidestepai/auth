@@ -67,24 +67,31 @@ instances) — `Xano.register*` does not dedupe, and duplicate auth tables make
   registered auth table*. If your package ships an auth table, document that
   the consumer must not register another one.
 
-## Identity: explicit guids vs derived [port-specific decision, reusable rule]
+## Identity: leave it to the consumer's lock [reusable rule]
 
-A def with no `guid` gets one derived from its kind + name — stable, and fine
-for a brand-new package. An **explicit** `guid` pins identity to an object that
-already exists somewhere.
+Identity resolution has a three-level precedence: an explicit in-code `guid`
+wins; else the consumer's seeded `xano.lock` entry; else `md5("<kind>:<name>")`.
 
-- **xts-auth pins the quick-start template's guids, names, and
-  `xano:quick-start` tags verbatim** so importing over a workspace that has the
-  template *upgrades those objects in place*. That is a port-specific choice —
-  the flip side is that hand-edited template objects get overwritten, and the
-  template's branding shows up in fresh workspaces.
-- **A new extension (no upstream object to align with) should omit explicit
-  guids** and use its own naming plus a package-scoped tag (e.g.
-  `myext:core`). Derived guids are already deterministic per name.
+**Default: pin nothing.** A reusable extension package should ship defs with no
+explicit `guid` and no explicit `canonical`, and let the *consuming project's*
+`xano.lock` mint and freeze them. This is what xts-auth does. The lock belongs
+to the project, not the package — so identities (and API URLs) are stable per
+project and don't collide when the same package is used across many workspaces.
+Without a lock, everything falls back to the deterministic name-derivation,
+which is still self-consistent (references and targets agree because both flow
+through the same `deriveGuid`).
 
-Either way, the guid is the upgrade contract: same guid ⇒ import updates,
-different guid ⇒ import creates. Renaming a def without pinning its guid forks
-its identity.
+**When to pin an explicit guid instead:** only when the package must *adopt a
+specific object that already exists* in a target workspace — e.g. a port meant
+to upgrade Xano's quick-start template objects in place. Pinning couples the
+package to those exact guids and overwrites hand-edits on import, so it's a
+deliberate adoption choice, not a default. (xts-auth originally pinned the
+quick-start guids for exactly this reason, then dropped them: coupling the
+reference package to one template's identities was the wrong default.)
+
+The guid is the upgrade contract: same guid ⇒ import updates, different guid ⇒
+import creates. Let the lock own that contract unless you have a specific object
+to adopt.
 
 ## Testing [reusable]
 

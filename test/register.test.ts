@@ -43,7 +43,7 @@ describe("registerAuth (turnkey install)", () => {
     ]);
   });
 
-  it("stamps the pinned guids into the bundle payload verbatim", () => {
+  it("stamps the name-derived guid for each object (no lock seeded)", () => {
     const bundle = registerAuth(freshInstance()).export() as unknown as Bundle;
     const guids = [
       ...bundle.payload.dbo,
@@ -51,9 +51,16 @@ describe("registerAuth (turnkey install)", () => {
       ...bundle.payload.app,
       ...bundle.payload.query,
     ].map((o) => o.guid);
-    for (const pinned of Object.values(GUIDS)) {
-      expect(guids).toContain(pinned);
+    for (const derived of Object.values(GUIDS)) {
+      expect(guids).toContain(derived);
     }
+  });
+
+  it("leaves the api group's canonical empty for the lock/engine to assign", () => {
+    const bundle = registerAuth(freshInstance()).export() as unknown as Bundle & {
+      payload: { app: Array<{ canonical: string }> };
+    };
+    expect(bundle.payload.app[0]?.canonical).toBe("");
   });
 
   it("resolves auth/me's auth:true to the ported user table's guid", () => {
@@ -74,7 +81,7 @@ describe("registerAuth (turnkey install)", () => {
 });
 
 describe("consumer workspace with use_xdo:true", () => {
-  it("does not flip the user table's pinned storage mode", () => {
+  it("does not flip the user table's storage mode", () => {
     type Dbo = { name: string; use_xdo: boolean; index: Array<{ type: string }> };
     const bundle = registerAuth(
       new Xano().registerWorkspace({ name: "consumer-app", use_xdo: true }),

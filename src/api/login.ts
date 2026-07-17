@@ -14,7 +14,6 @@ import { authenticationGroup } from "./authentication-group.js";
 export const loginQuery = query({
   name: "auth/login",
   verb: "POST",
-  guid: "MQN7cCfXwpnM3BRYA8NBSOB48kI",
   apiGroup: authenticationGroup,
   description: "Login and retrieve an authentication token",
   tags: ["xano:quick-start"],

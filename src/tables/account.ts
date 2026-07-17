@@ -1,14 +1,12 @@
 /**
  * The `account` table — companies/teams that users belong to. Ported 1:1 from
- * the Xano quick-start template (`table/account.xs`); the explicit `guid`
- * pins identity so importing over a workspace that already has the quick-start
- * upgrades the same object in place.
+ * the Xano quick-start template (`table/account.xs`). Identity is left to the
+ * consumer's `xano.lock` (or the deterministic name-derived guid).
  */
 import { table, f } from "xanots";
 
 export const accountTable = table({
   name: "account",
-  guid: "nrR_wBVyH9n79trtWn3pnug7-2c",
   description: "Stores information about accounts that users belong to",
   auth: false,
   // The source stores fields as JSON under the internal `xdo` column; this also

@@ -14,7 +14,6 @@ import { accountTable } from "./account.js";
 
 export const eventLogTable = table({
   name: "event_log",
-  guid: "NWjNSptneQ5Gs3PBGX3KY3gZ8Fo",
   description: "Stores logs of user activities and events within the application.",
   auth: false,
   useXdo: true,

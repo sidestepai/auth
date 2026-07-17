@@ -16,7 +16,6 @@ import { authenticationGroup } from "./authentication-group.js";
 export const meQuery = query({
   name: "auth/me",
   verb: "GET",
-  guid: "aeu1-p-UhWY0Ymg2QE8xjSDdVKs",
   apiGroup: authenticationGroup,
   auth: true,
   description: "Get the user record belonging to the authentication token",

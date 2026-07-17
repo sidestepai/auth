@@ -24,8 +24,8 @@ const methodNames = (c: FieldXdo) =>
 describe("user table", () => {
   const u = encodeTable(userTable);
 
-  it("is the auth table with pinned identity and tags", () => {
-    expect(userTable.guid).toBe(GUIDS.user);
+  it("is the auth table with no pinned guid and quick-start tags", () => {
+    expect(userTable.guid).toBeUndefined();
     expect(u.auth).toBe(true);
     expect(u.use_xdo).toBe(false);
     expect(u.tag).toEqual(QUICK_START_TAG);
@@ -85,9 +85,9 @@ describe("account and event_log tables", () => {
   const a = encodeTable(accountTable);
   const e = encodeTable(eventLogTable);
 
-  it("pin their identities, tags, and xdo storage mode", () => {
-    expect(accountTable.guid).toBe(GUIDS.account);
-    expect(eventLogTable.guid).toBe(GUIDS.eventLog);
+  it("carry no pinned guid, plus tags and xdo storage mode", () => {
+    expect(accountTable.guid).toBeUndefined();
+    expect(eventLogTable.guid).toBeUndefined();
     expect(a.auth).toBe(false);
     expect(e.auth).toBe(false);
     expect(a.use_xdo).toBe(true);
@@ -130,9 +130,9 @@ describe("account and event_log tables", () => {
 describe("create_event_log function", () => {
   const fn = encodeFunction(createEventLogFn);
 
-  it("keeps the namespaced source name, guid, and tags verbatim", () => {
+  it("keeps the namespaced source name and tags, with no pinned guid", () => {
     expect(fn.name).toBe("Getting Started Template/create_event_log");
-    expect(createEventLogFn.guid).toBe(GUIDS.createEventLog);
+    expect(createEventLogFn.guid).toBeUndefined();
     expect(fn.tag).toEqual(QUICK_START_TAG);
   });
 

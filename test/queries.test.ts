@@ -23,11 +23,13 @@ const resultShape = (q: ReturnType<typeof encodeQuery>) =>
   (q.result as Array<{ name: string; value: string; tag: string }>).map((r) => [r.name, r.value, r.tag]);
 
 describe("Authentication api group", () => {
-  it("pins canonical, guid, and tags; queries bind to it by guid", () => {
+  it("leaves guid + canonical unset for the lock; queries still bind to it by derived guid", () => {
     const g = encodeApiGroup(authenticationGroup);
-    expect(g.canonical).toBe("QC35j52Y");
-    expect(authenticationGroup.guid).toBe(GUIDS.group);
+    // Empty canonical: the consumer's lock mints it (or the engine assigns it at import).
+    expect(g.canonical).toBe("");
+    expect(authenticationGroup.guid).toBeUndefined();
     expect(g.tag).toEqual(QUICK_START_TAG);
+    // Every query binds to the group's name-derived guid — reference and target agree.
     for (const q of [signupQuery, loginQuery, meQuery]) {
       expect(encodeQuery(q).app.id).toBe(GUIDS.group);
     }
@@ -40,7 +42,7 @@ describe("auth/signup", () => {
   it("has verb/path/guid/tags and three optional inputs with email filters", () => {
     expect(q.name).toBe("auth/signup");
     expect(q.verb).toBe("POST");
-    expect(signupQuery.guid).toBe(GUIDS.signup);
+    expect(signupQuery.guid).toBeUndefined();
     expect(q.tag).toEqual(QUICK_START_TAG);
     expect(q.input.map((i) => [i.name, i.required])).toEqual([
       ["name", false],
@@ -143,7 +145,7 @@ describe("auth/me", () => {
 
   it("is an authenticated GET with an empty input block", () => {
     expect(q.verb).toBe("GET");
-    expect(meQuery.guid).toBe(GUIDS.me);
+    expect(meQuery.guid).toBeUndefined();
     expect(q.auth).toBe(true);
     expect(q.input).toEqual([]);
   });
@@ -169,7 +171,14 @@ describe("auth/me", () => {
 });
 
 describe("identity invariants", () => {
-  it("explicit guids differ from name-derived guids (pinning is load-bearing)", () => {
-    expect(signupQuery.guid).not.toBe(deriveGuid("query", "auth/signup"));
+  it("no def pins a guid — identity is left to the consumer's lock / name-derivation", () => {
+    expect(signupQuery.guid).toBeUndefined();
+    expect(loginQuery.guid).toBeUndefined();
+    expect(meQuery.guid).toBeUndefined();
+    expect(authenticationGroup.guid).toBeUndefined();
+  });
+
+  it("the group binding resolves to the name-derived guid when no lock is seeded", () => {
+    expect(encodeQuery(signupQuery).app.id).toBe(deriveGuid("app", "Authentication"));
   });
 });
