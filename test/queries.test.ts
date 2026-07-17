@@ -9,15 +9,7 @@ import { authenticationGroup } from "../src/api/authentication-group.js";
 import { signupQuery } from "../src/api/signup.js";
 import { loginQuery } from "../src/api/login.js";
 import { meQuery } from "../src/api/me.js";
-
-const GUIDS = {
-  group: "Cr35df6IaPGaULJaUKfBjGjSu78",
-  signup: "VWl1Tdrrm17hR5zrCvkA-W-zcyE",
-  login: "MQN7cCfXwpnM3BRYA8NBSOB48kI",
-  me: "aeu1-p-UhWY0Ymg2QE8xjSDdVKs",
-  user: "CX-2L9cgEG4o9AkPNkWJK792tWs",
-  createEventLog: "R_0tL5hQFC0aQrgi0qcbjhsMxhE",
-};
+import { GUIDS, QUICK_START_TAG } from "./constants.js";
 
 type Stmt = {
   name: string;
@@ -35,7 +27,7 @@ describe("Authentication api group", () => {
     const g = encodeApiGroup(authenticationGroup);
     expect(g.canonical).toBe("QC35j52Y");
     expect(authenticationGroup.guid).toBe(GUIDS.group);
-    expect(g.tag).toEqual([{ tag: "xano:quick-start" }]);
+    expect(g.tag).toEqual(QUICK_START_TAG);
     for (const q of [signupQuery, loginQuery, meQuery]) {
       expect(encodeQuery(q).app.id).toBe(GUIDS.group);
     }
@@ -49,7 +41,7 @@ describe("auth/signup", () => {
     expect(q.name).toBe("auth/signup");
     expect(q.verb).toBe("POST");
     expect(signupQuery.guid).toBe(GUIDS.signup);
-    expect(q.tag).toEqual([{ tag: "xano:quick-start" }]);
+    expect(q.tag).toEqual(QUICK_START_TAG);
     expect(q.input.map((i) => [i.name, i.required])).toEqual([
       ["name", false],
       ["email", false],

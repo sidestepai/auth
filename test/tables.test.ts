@@ -5,27 +5,21 @@
  */
 import { describe, it, expect } from "vitest";
 import { encodeTable, encodeFunction } from "xanots";
+import type { FieldXdo } from "xanots";
 import { userTable } from "../src/tables/user.js";
 import { accountTable } from "../src/tables/account.js";
 import { eventLogTable } from "../src/tables/event-log.js";
 import { createEventLogFn } from "../src/functions/create-event-log.js";
+import { GUIDS, QUICK_START_TAG } from "./constants.js";
 
-const QUICK_START_TAG = [{ tag: "xano:quick-start" }];
-
-const GUIDS = {
-  user: "CX-2L9cgEG4o9AkPNkWJK792tWs",
-  account: "nrR_wBVyH9n79trtWn3pnug7-2c",
-  eventLog: "NWjNSptneQ5Gs3PBGX3KY3gZ8Fo",
-  createEventLog: "R_0tL5hQFC0aQrgi0qcbjhsMxhE",
-};
-
-type Col = { name: string; type: string; nullable: boolean; access: string; values: unknown[]; methods: Array<{ name: string; arg: string[] }>; children: Col[] };
-const col = (t: ReturnType<typeof encodeTable>, name: string): Col => {
-  const c = (t.schema as unknown as Col[]).find((c) => c.name === name);
+const col = (t: ReturnType<typeof encodeTable>, name: string): FieldXdo => {
+  const c = t.schema.find((c) => c.name === name);
   if (!c) throw new Error(`column ${name} not found`);
   return c;
 };
-const methodNames = (c: Col) => c.methods.map((m) => (m.arg.length ? `${m.name}:${m.arg.join(",")}` : m.name));
+const children = (c: FieldXdo) => c.children as FieldXdo[];
+const methodNames = (c: FieldXdo) =>
+  c.methods.map((m) => (m.arg.length ? `${m.name}:${m.arg.join(",")}` : m.name));
 
 describe("user table", () => {
   const u = encodeTable(userTable);
@@ -38,7 +32,7 @@ describe("user table", () => {
   });
 
   it("carries the source's column set, nullability, and filters", () => {
-    expect((u.schema as unknown as Col[]).map((c) => c.name)).toEqual([
+    expect(u.schema.map((c) => c.name)).toEqual([
       "id", "created_at", "name", "email", "password", "account_id", "role", "password_reset",
     ]);
     expect(col(u, "name").nullable).toBe(false);
@@ -64,7 +58,7 @@ describe("user table", () => {
     expect(col(u, "role").values).toEqual(["admin", "member"]);
     const reset = col(u, "password_reset");
     expect(reset.type).toBe("obj");
-    expect(reset.children.map((c) => [c.name, c.type, c.nullable])).toEqual([
+    expect(children(reset).map((c) => [c.name, c.type, c.nullable])).toEqual([
       ["token", "password", true],
       ["expiration", "epochms", true],
       ["used", "bool", true],

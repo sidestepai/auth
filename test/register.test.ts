@@ -14,6 +14,7 @@ import {
   accountTable,
   eventLogTable,
 } from "../src/index.js";
+import { GUIDS } from "./constants.js";
 
 type Bundle = {
   payload: {
@@ -50,16 +51,7 @@ describe("registerAuth (turnkey install)", () => {
       ...bundle.payload.app,
       ...bundle.payload.query,
     ].map((o) => o.guid);
-    for (const pinned of [
-      "CX-2L9cgEG4o9AkPNkWJK792tWs",
-      "nrR_wBVyH9n79trtWn3pnug7-2c",
-      "NWjNSptneQ5Gs3PBGX3KY3gZ8Fo",
-      "R_0tL5hQFC0aQrgi0qcbjhsMxhE",
-      "Cr35df6IaPGaULJaUKfBjGjSu78",
-      "VWl1Tdrrm17hR5zrCvkA-W-zcyE",
-      "MQN7cCfXwpnM3BRYA8NBSOB48kI",
-      "aeu1-p-UhWY0Ymg2QE8xjSDdVKs",
-    ]) {
+    for (const pinned of Object.values(GUIDS)) {
       expect(guids).toContain(pinned);
     }
   });
@@ -67,7 +59,7 @@ describe("registerAuth (turnkey install)", () => {
   it("resolves auth/me's auth:true to the ported user table's guid", () => {
     const bundle = registerAuth(freshInstance()).export() as unknown as Bundle;
     const me = bundle.payload.query.find((q) => q.name === "auth/me");
-    expect(me?.auth).toBe("CX-2L9cgEG4o9AkPNkWJK792tWs");
+    expect(me?.auth).toBe(GUIDS.user);
   });
 
   it("returns the same instance for chaining", () => {
