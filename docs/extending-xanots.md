@@ -2,12 +2,12 @@
 
 How to build an npm package that ships reusable Xano workspace objects (tables,
 functions, API groups, queries) as typed [xanots](https://github.com/xano-inc/xanots)
-defs. **xanots-auth is the reference implementation** — this guide documents the
+defs. **xts-auth is the reference implementation** — this guide documents the
 pattern it established, written for the author of the *next* extension package.
 
 > **Provisional (n=1).** These conventions have been validated by exactly one
 > package. Sections marked **[reusable]** should generalize; sections marked
-> **[port-specific]** are choices xanots-auth made because it recreates an
+> **[port-specific]** are choices xts-auth made because it recreates an
 > existing Xano template — re-derive those for your own package rather than
 > copying them.
 
@@ -51,7 +51,7 @@ test/
 
 Export **both** granular named defs (cherry-picking, tree-shaking, extension)
 and a one-call `registerX(xano)` helper (the plug-and-play path). Guard the
-helper against double-registration (xanots-auth uses a `WeakSet` of installed
+helper against double-registration (xts-auth uses a `WeakSet` of installed
 instances) — `Xano.register*` does not dedupe, and duplicate auth tables make
 `export()` throw.
 
@@ -73,7 +73,7 @@ A def with no `guid` gets one derived from its kind + name — stable, and fine
 for a brand-new package. An **explicit** `guid` pins identity to an object that
 already exists somewhere.
 
-- **xanots-auth pins the quick-start template's guids, names, and
+- **xts-auth pins the quick-start template's guids, names, and
   `xano:quick-start` tags verbatim** so importing over a workspace that has the
   template *upgrades those objects in place*. That is a port-specific choice —
   the flip side is that hand-edited template objects get overwritten, and the

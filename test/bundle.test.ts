@@ -19,7 +19,7 @@ const golden = JSON.parse(
 );
 
 const exportBundle = () =>
-  registerAuth(new Xano().registerWorkspace({ name: "xanots-auth-golden" })).export() as any;
+  registerAuth(new Xano().registerWorkspace({ name: "xts-auth-golden" })).export() as any;
 
 describe("golden bundle", () => {
   it("the exported bundle deep-equals the committed fixture, signature included", () => {

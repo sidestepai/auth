@@ -1,4 +1,4 @@
-# xanots-auth
+# xts-auth
 
 Xano's quick-start authentication — `auth/signup`, `auth/login`, `auth/me`,
 plus the `user`, `account`, and `event_log` tables and the event-log function —
@@ -18,13 +18,13 @@ upstream work.
 ## Install
 
 ```bash
-npm install xanots-auth xanots@0.0.2-beta.2
+npm install xts-auth xanots@0.0.2-beta.2
 ```
 
 Pin the **exact** xanots version shown — it is the version this release's
 golden-bundle contract was verified against. (Prerelease semver ranges and the
 moving `@beta` dist-tag both break or drift across beta tuples; each
-xanots-auth release documents its tested peer.)
+xts-auth release documents its tested peer.)
 
 ## Quickstart
 
@@ -41,7 +41,7 @@ Pick your situation first:
 ```ts
 // xano/index.ts
 import { workspace } from "xanots";
-import { registerAuth } from "xanots-auth";
+import { registerAuth } from "xts-auth";
 
 export default registerAuth(workspace("my-app"));
 ```
@@ -141,7 +141,7 @@ preserved on purpose — changing them here would fork the template's behavior:
 The exported bundle is covered by a byte-exact golden test. A xanots peer bump
 that changes the encoded bundle fails this package's test suite before it can
 reach you — which is why the peer is pinned exactly and moved in lockstep with
-xanots-auth releases.
+xts-auth releases.
 
 ## License
 

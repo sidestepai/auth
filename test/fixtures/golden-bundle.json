@@ -5,7 +5,7 @@
   "payload": {
     "partial": false,
     "workspace": {
-      "name": "xanots-auth-golden",
+      "name": "xts-auth-golden",
       "description": "",
       "canonical": "",
       "use_xdo": false,
@@ -2625,5 +2625,5 @@
     "service": [],
     "branch": []
   },
-  "sig": "XSanVzGue4h0XARCH4HxktBxDvM."
+  "sig": "YDqElNKllpstIqJlJoUJ_r9WwwY."
 }
