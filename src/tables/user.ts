@@ -1,0 +1,42 @@
+/**
+ * The `user` table — the workspace's auth table. Ported 1:1 from the Xano
+ * quick-start template (`table/user.xs`) with one documented deviation: the
+ * source's `account_id` carries a dangling `table = ""` reference; since this
+ * package ships the `account` table too, the column links to the real def.
+ *
+ * `id` / `created_at` and the `primary(id)` / `btree(created_at desc)` indexes
+ * are the engine's system defaults — auto-injected, not declared here.
+ */
+import { table, f } from "xanots";
+import { accountTable } from "./account.js";
+
+export const userTable = table({
+  name: "user",
+  guid: "CX-2L9cgEG4o9AkPNkWJK792tWs",
+  description: "Stores user information and allows the user to authenticate  against",
+  auth: true,
+  tags: ["xano:quick-start"],
+  schema: {
+    name: f.text({ methods: ["trim"] }),
+    email: f.email({ nullable: true, methods: ["trim", "lower"] }),
+    // f.password defaults to access:"internal" — matching the source's hidden hash.
+    password: f.password({ nullable: true, methods: ["min:8", "minAlpha:1", "minDigit:1"] }),
+    account_id: f.tableRef(accountTable, {
+      nullable: true,
+      description: "Reference to the company the user belongs to.",
+    }),
+    role: f.enum(["admin", "member"], {
+      nullable: true,
+      description: "The role of the user within their company (e.g., 'admin', 'member').",
+    }),
+    password_reset: f.object(
+      {
+        token: f.password({ nullable: true }),
+        expiration: f.timestamp({ nullable: true }),
+        used: f.bool({ nullable: true }),
+      },
+      { nullable: true },
+    ),
+  },
+  index: [{ type: "btree|unique", fields: [{ name: "email", op: "asc" }] }],
+});
