@@ -2,12 +2,12 @@
 
 How to build an npm package that ships reusable Xano workspace objects (tables,
 functions, API groups, queries) as typed [xanots](https://github.com/xano-inc/xanots)
-defs. **xts-auth is the reference implementation** — this guide documents the
+defs. **@xanots/auth is the reference implementation** — this guide documents the
 pattern it established, written for the author of the *next* extension package.
 
 > **Provisional (n=1).** These conventions have been validated by exactly one
 > package. Sections marked **[reusable]** should generalize; sections marked
-> **[port-specific]** are choices xts-auth made because it recreates an
+> **[port-specific]** are choices @xanots/auth made because it recreates an
 > existing Xano template — re-derive those for your own package rather than
 > copying them.
 
@@ -51,7 +51,7 @@ test/
 
 Export **both** granular named defs (cherry-picking, tree-shaking, extension)
 and a one-call `registerX(xano)` helper (the plug-and-play path). Guard the
-helper against double-registration (xts-auth uses a `WeakSet` of installed
+helper against double-registration (@xanots/auth uses a `WeakSet` of installed
 instances) — `Xano.register*` does not dedupe, and duplicate auth tables make
 `export()` throw.
 
@@ -74,7 +74,7 @@ wins; else the consumer's seeded `xano.lock` entry; else `md5("<kind>:<name>")`.
 
 **Default: pin nothing.** A reusable extension package should ship defs with no
 explicit `guid` and no explicit `canonical`, and let the *consuming project's*
-`xano.lock` mint and freeze them. This is what xts-auth does. The lock belongs
+`xano.lock` mint and freeze them. This is what @xanots/auth does. The lock belongs
 to the project, not the package — so identities (and API URLs) are stable per
 project and don't collide when the same package is used across many workspaces.
 Without a lock, everything falls back to the deterministic name-derivation,
@@ -85,7 +85,7 @@ through the same `deriveGuid`).
 specific object that already exists* in a target workspace — e.g. a port meant
 to upgrade Xano's quick-start template objects in place. Pinning couples the
 package to those exact guids and overwrites hand-edits on import, so it's a
-deliberate adoption choice, not a default. (xts-auth originally pinned the
+deliberate adoption choice, not a default. (@xanots/auth originally pinned the
 quick-start guids for exactly this reason, then dropped them: coupling the
 reference package to one template's identities was the wrong default.)
 

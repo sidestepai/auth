@@ -1,0 +1,76 @@
+# @xanots/auth
+
+> Xano's quick-start authentication (`auth/signup`, `auth/login`, `auth/me`, plus
+> the `user`, `account`, and `event_log` tables and an event-log function),
+> recreated as typed [xanots](https://www.npmjs.com/package/@xanots/core) defs you
+> register into a workspace and version behind npm. It is also the **reference
+> xanots extension package**.
+
+A xanots extension package exports plain, typed def objects (the factories
+`table()`, `query()`, `defineFunction()`, `apiGroup()` are pure identity
+functions). The *consumer's* `Xano` instance does all registration and encoding
+via `export()`. This package pins no guids and no canonical — identity comes from
+the consuming project's `xano.lock`, or falls back to `md5("<kind>:<name>")`.
+
+## Install
+
+```bash
+npm install @xanots/auth @xanots/core@0.0.2-beta.4
+```
+
+Pin the **exact** `@xanots/core` version shown — it is the version this release's
+golden-bundle contract was verified against. Prerelease semver ranges and the
+`@beta` dist-tag both drift across beta tuples. Each release documents its tested
+peer in the README.
+
+## Quickstart
+
+```ts
+// xano/index.ts
+import { workspace } from "@xanots/core";
+import { registerAuth } from "@xanots/auth";
+
+export default registerAuth(workspace("my-app"));
+```
+
+```bash
+npx xanots export   # → importable workspace bundle
+```
+
+## Exports
+
+- `registerAuth(xano)` — one-call install of the full set; returns the instance
+  for chaining. Idempotency-guarded (throws on a second call per instance).
+- Tables: `userTable` (auth table), `accountTable`, `eventLogTable`
+- Function: `createEventLogFn`
+- API: `authenticationGroup`, `signupQuery`, `loginQuery`, `meQuery`
+
+Cherry-pick individual defs instead of `registerAuth` for granular control; keep
+each def's dependencies together (queries need `userTable`; `createEventLogFn`
+needs `eventLogTable`). Never register a def twice.
+
+## Constraints for agents (read before using)
+
+- **Exactly one auth table.** `userTable` is `auth: true`. Registering another
+  `auth: true` table makes `export()` throw, and `auth/me` resolves `auth: true`
+  to the single registered auth table.
+- **Call `registerAuth` at most once per `Xano` instance** — it throws otherwise.
+- **This is a faithful 1:1 port of Xano's quick-start template**; its quirks are
+  preserved on purpose. Notably:
+  - `event_log.metadata` stores the full fetched user record **including the
+    password hash** on signup/login. Treat `event_log` like `user`.
+  - Request history captures plaintext signup/login bodies and minted tokens —
+    disable history on the Authentication group before production.
+  - Every endpoint (including the `auth/me` GET) writes an `event_log` row; the
+    table grows unbounded with no pruning.
+  - A valid token for a deleted user → `auth/me` returns a `null` body, HTTP 200.
+  - Tokens live 24h with no refresh or revocation.
+- **Identity is the consumer's lock, not this package.** Commit `xano.lock` to
+  keep guids and the API URL stable across re-imports.
+
+## Docs
+
+- [README.md](README.md): full endpoint reference, table shapes, and the complete
+  "read before production" behavior notes.
+- [docs/extending-xanots.md](docs/extending-xanots.md): the pattern for building
+  your own xanots extension package (this package is the reference).
