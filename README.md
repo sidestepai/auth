@@ -18,7 +18,7 @@ upstream work.
 ## Install
 
 ```bash
-npm install xts-auth xanots@0.0.2-beta.2
+npm install xts-auth xanots@0.0.2-beta.3
 ```
 
 Pin the **exact** xanots version shown — it is the version this release's
