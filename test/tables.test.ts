@@ -4,8 +4,8 @@
  * (Whole-bundle byte stability is the golden test's job — see bundle.test.ts.)
  */
 import { describe, it, expect } from "vitest";
-import { encodeTable, encodeFunction } from "@xanots/core";
-import type { FieldXdo } from "@xanots/core";
+import { encodeTable, encodeFunction } from "@sidestep/core";
+import type { FieldXdo } from "@sidestep/core";
 import { userTable } from "../src/tables/user.js";
 import { accountTable } from "../src/tables/account.js";
 import { eventLogTable } from "../src/tables/event-log.js";

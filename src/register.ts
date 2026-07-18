@@ -9,7 +9,7 @@
  *   `auth: true` resolves at export() to the single registered auth table.
  * - Do not additionally pass this package's defs to your own register* calls.
  */
-import type { Xano } from "@xanots/core";
+import type { Xano } from "@sidestep/core";
 import { userTable } from "./tables/user.js";
 import { accountTable } from "./tables/account.js";
 import { eventLogTable } from "./tables/event-log.js";
@@ -21,7 +21,7 @@ import { meQuery } from "./api/me.js";
 
 const installed = new WeakSet<Xano>();
 
-/** Register every @xanots/auth def on the given instance; returns it for chaining. */
+/** Register every @sidestep/auth def on the given instance; returns it for chaining. */
 export function registerAuth<X extends Xano>(xano: X): X {
   if (installed.has(xano)) {
     throw new Error(

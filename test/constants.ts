@@ -8,7 +8,7 @@
  * target object emits. The committed golden fixture freezes the literal values,
  * so a change to the derivation formula is still caught there.
  */
-import { deriveGuid } from "@xanots/core";
+import { deriveGuid } from "@sidestep/core";
 
 export const GUIDS = {
   user: deriveGuid("dbo", "user"),

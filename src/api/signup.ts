@@ -6,7 +6,7 @@
  * password hash) is logged into `event_log.metadata` — a faithful-port quirk
  * consumers must know about.
  */
-import { query, input, s, expr, ref, inp, c } from "@xanots/core";
+import { query, input, s, expr, ref, inp, c } from "@sidestep/core";
 import { userTable } from "../tables/user.js";
 import { createEventLogFn } from "../functions/create-event-log.js";
 import { authenticationGroup } from "./authentication-group.js";

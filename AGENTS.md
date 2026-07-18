@@ -5,8 +5,8 @@ For agents *consuming* the published package, see [llms.txt](llms.txt) instead.
 
 ## What this is
 
-`@xanots/auth` ships Xano's quick-start authentication as typed
-[xanots](https://www.npmjs.com/package/@xanots/core) defs. It exports plain def
+`@sidestep/auth` ships Xano's quick-start authentication as typed
+[sidestep](https://www.npmjs.com/package/@sidestep/core) defs. It exports plain def
 objects; there is **no runtime** — the consumer's `Xano` instance registers and
 encodes them. Everything is verified at the compiled-output level.
 
@@ -40,14 +40,14 @@ Run `npm run typecheck && npm run lint && npm test` before committing.
   use the bare-name form.
 - **Pin no guids and no canonical.** Identity belongs to the consumer's `xano.lock`
   (fallback: `md5("<kind>:<name>")`). Don't add explicit `guid`/`canonical`.
-- **`@xanots/core` is a `peerDependency` pinned to an exact version**, mirrored in
+- **`@sidestep/core` is a `peerDependency` pinned to an exact version**, mirrored in
   `devDependencies`. Never make it a regular dependency — one shared copy only.
 
 ## The golden-bundle contract
 
 `test/bundle.test.ts` registers everything on a fresh `Xano`, calls `export()`,
 and deep-equals the result against `test/fixtures/golden-bundle.json` (raw, no
-normalizer). This is the peer-drift tripwire: a `@xanots/core` bump that changes
+normalizer). This is the peer-drift tripwire: a `@sidestep/core` bump that changes
 encoding fails here first.
 
 Regenerating the fixture is a deliberate, reviewed act — never do it just to make
@@ -57,6 +57,6 @@ before committing.
 
 ## Release
 
-Lockstep with the peer: bump the `@xanots/core` pin, regenerate + review the
+Lockstep with the peer: bump the `@sidestep/core` pin, regenerate + review the
 golden fixture, then `npm run release:beta`. Document the tested peer version in
 the README install command.

@@ -8,7 +8,7 @@
  * `metadata` — including the password hash on signup/login. Treat this table
  * with the same access/retention discipline as `user` itself.
  */
-import { table, f } from "@xanots/core";
+import { table, f } from "@sidestep/core";
 import { userTable } from "./user.js";
 import { accountTable } from "./account.js";
 

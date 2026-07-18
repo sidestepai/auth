@@ -8,7 +8,7 @@
  * `auth: true` resolves at the consumer's `export()` to the single registered
  * auth table — the consumer must register exactly one (the ported `user`).
  */
-import { query, s, ref, auth, c } from "@xanots/core";
+import { query, s, ref, auth, c } from "@sidestep/core";
 import { userTable } from "../tables/user.js";
 import { createEventLogFn } from "../functions/create-event-log.js";
 import { authenticationGroup } from "./authentication-group.js";

@@ -1,12 +1,12 @@
-# @xanots/auth
+# @sidestep/auth
 
+> A [sidestep](https://www.npmjs.com/package/@sidestep/core) package implementing
 > Xano's quick-start authentication (`auth/signup`, `auth/login`, `auth/me`, plus
 > the `user`, `account`, and `event_log` tables and an event-log function),
-> recreated as typed [xanots](https://www.npmjs.com/package/@xanots/core) defs you
-> register into a workspace and version behind npm. It is also the **reference
-> xanots extension package**.
+> recreated as typed sidestep defs you register into a workspace and version
+> behind npm. It is also the **reference sidestep extension package**.
 
-A xanots extension package exports plain, typed def objects (the factories
+A sidestep extension package exports plain, typed def objects (the factories
 `table()`, `query()`, `defineFunction()`, `apiGroup()` are pure identity
 functions). The *consumer's* `Xano` instance does all registration and encoding
 via `export()`. This package pins no guids and no canonical — identity comes from
@@ -15,10 +15,10 @@ the consuming project's `xano.lock`, or falls back to `md5("<kind>:<name>")`.
 ## Install
 
 ```bash
-npm install @xanots/auth @xanots/core
+npm install @sidestep/auth @sidestep/core
 ```
 
-`@xanots/core` is a `^1.0.0` peer dependency — install the current stable
+`@sidestep/core` is a `^1.0.0` peer dependency — install the current stable
 release. The golden-bundle test in this package is the peer-drift tripwire: if a
 core upgrade changes encoding, it fails here before consumers are affected.
 
@@ -26,14 +26,14 @@ core upgrade changes encoding, it fails here before consumers are affected.
 
 ```ts
 // xano/index.ts
-import { workspace } from "@xanots/core";
-import { registerAuth } from "@xanots/auth";
+import { workspace } from "@sidestep/core";
+import { registerAuth } from "@sidestep/auth";
 
 export default registerAuth(workspace("my-app"));
 ```
 
 ```bash
-npx xanots export   # → importable workspace bundle
+npx sidestep export   # → importable workspace bundle
 ```
 
 ## Exports
@@ -71,5 +71,5 @@ needs `eventLogTable`). Never register a def twice.
 
 - [README.md](README.md): full endpoint reference, table shapes, and the complete
   "read before production" behavior notes.
-- [docs/extending-xanots.md](docs/extending-xanots.md): the pattern for building
-  your own xanots extension package (this package is the reference).
+- [docs/extending-sidestep.md](docs/extending-sidestep.md): the pattern for building
+  your own sidestep extension package (this package is the reference).

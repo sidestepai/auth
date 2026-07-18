@@ -9,5 +9,5 @@ export default defineConfig({
   target: "es2022",
   // The peer is resolved from the consumer's install — never bundled. A bundled
   // copy would fork the statement/kind registries the consumer's export() uses.
-  external: ["@xanots/core"],
+  external: ["@sidestep/core"],
 });

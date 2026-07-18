@@ -4,7 +4,7 @@
  * freezes them at export, or — with no lock — the guid derives deterministically
  * from the name and the engine assigns the canonical at import.
  */
-import { apiGroup } from "@xanots/core";
+import { apiGroup } from "@sidestep/core";
 
 export const authenticationGroup = apiGroup({
   name: "Authentication",

@@ -1,12 +1,13 @@
-# @xanots/auth
+# @sidestep/auth
 
-Xano's quick-start authentication — `auth/signup`, `auth/login`, `auth/me`,
-plus the `user`, `account`, and `event_log` tables and the event-log function —
-recreated as typed [xanots](https://www.npmjs.com/package/@xanots/core) defs you can
-register into any workspace and version behind npm.
+A [sidestep](https://www.npmjs.com/package/@sidestep/core) package implementing
+Xano's quick-start authentication — `auth/signup`, `auth/login`, `auth/me`, plus
+the `user`, `account`, and `event_log` tables and the event-log function —
+recreated as typed sidestep defs you can register into any workspace and version
+behind npm.
 
-This package is also the **reference xanots extension package**: see
-[docs/extending-xanots.md](docs/extending-xanots.md) for the pattern it
+This package is also the **reference sidestep extension package**: see
+[docs/extending-sidestep.md](docs/extending-sidestep.md) for the pattern it
 establishes (and which parts of it you should copy vs. re-derive).
 
 **Positioning:** v1 assumes this package provides your workspace's **only**
@@ -18,25 +19,25 @@ upstream work.
 ## Install
 
 ```bash
-npm install @xanots/auth @xanots/core
+npm install @sidestep/auth @sidestep/core
 ```
 
-xanots is a `^1.0.0` peer dependency — install the current stable release. This
-package's golden-bundle test is the peer-drift tripwire: if a xanots upgrade
+sidestep is a `^1.0.0` peer dependency — install the current stable release. This
+package's golden-bundle test is the peer-drift tripwire: if a sidestep upgrade
 changes encoding, it fails here before consumers are affected.
 
 ## Quickstart
 
 ```ts
 // xano/index.ts
-import { workspace } from "@xanots/core";
-import { registerAuth } from "@xanots/auth";
+import { workspace } from "@sidestep/core";
+import { registerAuth } from "@sidestep/auth";
 
 export default registerAuth(workspace("my-app"));
 ```
 
 ```bash
-npx xanots export   # → importable workspace bundle
+npx sidestep export   # → importable workspace bundle
 ```
 
 Import the bundle into your Xano workspace. The endpoints are served under the
@@ -149,10 +150,10 @@ preserved on purpose — changing them here would fork the template's behavior:
 
 ## Versioning
 
-The exported bundle is covered by a byte-exact golden test. A xanots peer bump
+The exported bundle is covered by a byte-exact golden test. A sidestep peer bump
 that changes the encoded bundle fails this package's test suite before it can
 reach you — which is why the peer is pinned exactly and moved in lockstep with
-`@xanots/auth` releases.
+`@sidestep/auth` releases.
 
 ## License
 

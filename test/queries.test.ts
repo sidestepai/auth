@@ -4,7 +4,7 @@
  * expiration, output column selection, and response shapes.
  */
 import { describe, it, expect } from "vitest";
-import { encodeQuery, encodeApiGroup, deriveGuid } from "@xanots/core";
+import { encodeQuery, encodeApiGroup, deriveGuid } from "@sidestep/core";
 import { authenticationGroup } from "../src/api/authentication-group.js";
 import { signupQuery } from "../src/api/signup.js";
 import { loginQuery } from "../src/api/login.js";

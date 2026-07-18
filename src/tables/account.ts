@@ -3,7 +3,7 @@
  * the Xano quick-start template (`table/account.xs`). Identity is left to the
  * consumer's `xano.lock` (or the deterministic name-derived guid).
  */
-import { table, f } from "@xanots/core";
+import { table, f } from "@sidestep/core";
 
 export const accountTable = table({
   name: "account",

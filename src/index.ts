@@ -1,6 +1,6 @@
 /**
- * @xanots/auth — Xano's quick-start authentication surface (signup/login/me,
- * user/account/event_log tables, event-log function) as typed xanots defs.
+ * @sidestep/auth — Xano's quick-start authentication surface (signup/login/me,
+ * user/account/event_log tables, event-log function) as typed sidestep defs.
  *
  * Use `registerAuth(xano)` for the turnkey install, or register individual
  * defs for granular control. All cross-object references are guid-resolved at

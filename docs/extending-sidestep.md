@@ -1,19 +1,19 @@
-# Building a xanots extension package
+# Building a sidestep extension package
 
 How to build an npm package that ships reusable Xano workspace objects (tables,
-functions, API groups, queries) as typed [xanots](https://github.com/xano-inc/xanots)
-defs. **@xanots/auth is the reference implementation** — this guide documents the
+functions, API groups, queries) as typed [sidestep](https://www.npmjs.com/package/@sidestep/core)
+defs. **@sidestep/auth is the reference implementation** — this guide documents the
 pattern it established, written for the author of the *next* extension package.
 
 > **Provisional (n=1).** These conventions have been validated by exactly one
 > package. Sections marked **[reusable]** should generalize; sections marked
-> **[port-specific]** are choices @xanots/auth made because it recreates an
+> **[port-specific]** are choices @sidestep/auth made because it recreates an
 > existing Xano template — re-derive those for your own package rather than
 > copying them.
 
 ## The model [reusable]
 
-A xanots extension package exports **plain def objects**. xanots factories
+a sidestep extension package exports **plain def objects**. sidestep factories
 (`table()`, `query()`, `defineFunction()`, `apiGroup()`) are identity functions
 with zero side effects, so defs cross package boundaries as ordinary values.
 The *consumer's* `Xano` instance does all registration and encoding:
@@ -28,8 +28,8 @@ your-package                        consumer project
 
 Two consequences drive everything else:
 
-1. **Statement encoding happens in the consumer's xanots copy** — which is why
-   xanots must be a `peerDependency` (one shared copy), never a bundled
+1. **Statement encoding happens in the consumer's sidestep copy** — which is why
+   sidestep must be a `peerDependency` (one shared copy), never a bundled
    dependency.
 2. **Cross-object references are resolved to guids at authoring time** (when
    your module is evaluated), so they are correct in any consumer workspace.
@@ -51,7 +51,7 @@ test/
 
 Export **both** granular named defs (cherry-picking, tree-shaking, extension)
 and a one-call `registerX(xano)` helper (the plug-and-play path). Guard the
-helper against double-registration (@xanots/auth uses a `WeakSet` of installed
+helper against double-registration (@sidestep/auth uses a `WeakSet` of installed
 instances) — `Xano.register*` does not dedupe, and duplicate auth tables make
 `export()` throw.
 
@@ -74,7 +74,7 @@ wins; else the consumer's seeded `xano.lock` entry; else `md5("<kind>:<name>")`.
 
 **Default: pin nothing.** A reusable extension package should ship defs with no
 explicit `guid` and no explicit `canonical`, and let the *consuming project's*
-`xano.lock` mint and freeze them. This is what @xanots/auth does. The lock belongs
+`xano.lock` mint and freeze them. This is what @sidestep/auth does. The lock belongs
 to the project, not the package — so identities (and API URLs) are stable per
 project and don't collide when the same package is used across many workspaces.
 Without a lock, everything falls back to the deterministic name-derivation,
@@ -85,7 +85,7 @@ through the same `deriveGuid`).
 specific object that already exists* in a target workspace — e.g. a port meant
 to upgrade Xano's quick-start template objects in place. Pinning couples the
 package to those exact guids and overwrites hand-edits on import, so it's a
-deliberate adoption choice, not a default. (@xanots/auth originally pinned the
+deliberate adoption choice, not a default. (@sidestep/auth originally pinned the
 quick-start guids for exactly this reason, then dropped them: coupling the
 reference package to one template's identities was the wrong default.)
 
@@ -107,22 +107,22 @@ Two levels, both asserting on **compiled output** (there is no runtime here):
    stripping keys risks blinding the test to exactly the identity fields it
    protects. Regenerating the fixture is an explicit, reviewed act.
 
-The golden test doubles as the **peer-drift tripwire**: when a xanots upgrade
+The golden test doubles as the **peer-drift tripwire**: when a sidestep upgrade
 changes encoding, this test fails before consumers are affected.
 
 ## Packaging and publishing [reusable]
 
 - ESM-only (`"type": "module"`), `tsup` build (esm + dts), `files: ["dist", "README.md"]`.
-- `xanots` in **both** `peerDependencies` (a `^1.0.0` caret range against the
+- `sidestep` in **both** `peerDependencies` (a `^1.0.0` caret range against the
   stable major the golden fixture was generated against) and `devDependencies`
   (for tests). The golden-bundle test is the safety net: any minor/patch that
   actually changes encoding fails it before consumers are affected.
-- Regenerate + review the golden fixture whenever you bump the tested xanots
+- Regenerate + review the golden fixture whenever you bump the tested sidestep
   version, then `npm publish`.
-- The README install command stays version-free (`npm install @xanots/core`) —
+- The README install command stays version-free (`npm install @sidestep/core`) —
   consumers get the current stable release resolved by the caret peer range.
-- During local development against an unpublished xanots build, point the
-  devDependency at a packed tarball (`file:../xanots/xanots-<version>.tgz`);
+- During local development against an unpublished sidestep build, point the
+  devDependency at a packed tarball (`file:../sidestep/sidestep-<version>.tgz`);
   switch to the registry version before release so the README quickstart is
   what actually got tested.
 

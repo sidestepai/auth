@@ -6,12 +6,12 @@
  * very fields (guids, app bindings, indexes, canonical) this contract exists
  * to protect. Regenerating the fixture is an explicit, reviewed act.
  *
- * This is the tripwire that catches upstream xanots encoding drift when the
+ * This is the tripwire that catches upstream sidestep encoding drift when the
  * peer dependency is bumped.
  */
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { Xano } from "@xanots/core";
+import { Xano } from "@sidestep/core";
 import { registerAuth } from "../src/index.js";
 
 const golden = JSON.parse(
