@@ -1,4 +1,4 @@
-# xts-auth
+# @xanots/auth
 
 Xano's quick-start authentication — `auth/signup`, `auth/login`, `auth/me`,
 plus the `user`, `account`, and `event_log` tables and the event-log function —
@@ -24,7 +24,7 @@ npm install @xanots/auth @xanots/core@0.0.2-beta.4
 Pin the **exact** xanots version shown — it is the version this release's
 golden-bundle contract was verified against. (Prerelease semver ranges and the
 moving `@beta` dist-tag both break or drift across beta tuples; each
-xts-auth release documents its tested peer.)
+`@xanots/auth` release documents its tested peer.)
 
 ## Quickstart
 
@@ -153,7 +153,7 @@ preserved on purpose — changing them here would fork the template's behavior:
 The exported bundle is covered by a byte-exact golden test. A xanots peer bump
 that changes the encoded bundle fails this package's test suite before it can
 reach you — which is why the peer is pinned exactly and moved in lockstep with
-xts-auth releases.
+`@xanots/auth` releases.
 
 ## License
 

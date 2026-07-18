@@ -1,5 +1,5 @@
 /**
- * xts-auth — Xano's quick-start authentication surface (signup/login/me,
+ * @xanots/auth — Xano's quick-start authentication surface (signup/login/me,
  * user/account/event_log tables, event-log function) as typed xanots defs.
  *
  * Use `registerAuth(xano)` for the turnkey install, or register individual

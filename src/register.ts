@@ -21,7 +21,7 @@ import { meQuery } from "./api/me.js";
 
 const installed = new WeakSet<Xano>();
 
-/** Register every xts-auth def on the given instance; returns it for chaining. */
+/** Register every @xanots/auth def on the given instance; returns it for chaining. */
 export function registerAuth<X extends Xano>(xano: X): X {
   if (installed.has(xano)) {
     throw new Error(

@@ -1,20 +1,43 @@
 {
   "name": "@xanots/auth",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0",
   "description": "Plug-and-play Xano authentication (signup/login/me + user, account, event_log tables) as typed xanots defs — the reference xanots extension package.",
   "type": "module",
   "license": "MIT",
+  "author": "Xano",
+  "keywords": [
+    "xano",
+    "xanots",
+    "xanoscript",
+    "authentication",
+    "auth",
+    "signup",
+    "login",
+    "backend",
+    "codegen"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xano-skunkworks/xts-auth.git"
+  },
+  "homepage": "https://github.com/xano-skunkworks/xts-auth#readme",
+  "bugs": {
+    "url": "https://github.com/xano-skunkworks/xts-auth/issues"
+  },
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "llms.txt"
   ],
   "scripts": {
     "build": "tsup",

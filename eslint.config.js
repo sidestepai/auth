@@ -21,10 +21,17 @@ export default [
     },
     rules: {
       ...tseslint.configs.recommended.rules,
-      "@typescript-eslint/no-explicit-any": "off",
       "no-undef": "off",
       "no-redeclare": "off",
       "@typescript-eslint/no-redeclare": "error",
+    },
+  },
+  {
+    // Tests introspect the opaque exported bundle and loosely-typed statement
+    // contexts, where `any` is the pragmatic choice. Source stays `any`-free.
+    files: ["test/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ];
