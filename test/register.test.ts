@@ -4,7 +4,7 @@
  * guard rails (double-install, second auth table).
  */
 import { describe, it, expect } from "vitest";
-import { Xano, table, f } from "xanots";
+import { Xano, table, f } from "@xanots/core";
 import {
   registerAuth,
   userTable,

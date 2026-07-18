@@ -2,7 +2,7 @@
 
 Xano's quick-start authentication — `auth/signup`, `auth/login`, `auth/me`,
 plus the `user`, `account`, and `event_log` tables and the event-log function —
-recreated as typed [xanots](https://www.npmjs.com/package/xanots) defs you can
+recreated as typed [xanots](https://www.npmjs.com/package/@xanots/core) defs you can
 register into any workspace and version behind npm.
 
 This package is also the **reference xanots extension package**: see
@@ -18,7 +18,7 @@ upstream work.
 ## Install
 
 ```bash
-npm install xts-auth xanots@0.0.2-beta.3
+npm install @xanots/auth @xanots/core@0.0.2-beta.4
 ```
 
 Pin the **exact** xanots version shown — it is the version this release's
@@ -30,8 +30,8 @@ xts-auth release documents its tested peer.)
 
 ```ts
 // xano/index.ts
-import { workspace } from "xanots";
-import { registerAuth } from "xts-auth";
+import { workspace } from "@xanots/core";
+import { registerAuth } from "@xanots/auth";
 
 export default registerAuth(workspace("my-app"));
 ```

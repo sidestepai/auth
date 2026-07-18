@@ -11,7 +11,7 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { Xano } from "xanots";
+import { Xano } from "@xanots/core";
 import { registerAuth } from "../src/index.js";
 
 const golden = JSON.parse(

@@ -6,7 +6,7 @@
  * identical `accessdenied` "Invalid Credentials." so callers can't distinguish
  * unknown-email from wrong-password (deliberate source behavior).
  */
-import { query, input, s, expr, ref, inp, c } from "xanots";
+import { query, input, s, expr, ref, inp, c } from "@xanots/core";
 import { userTable } from "../tables/user.js";
 import { createEventLogFn } from "../functions/create-event-log.js";
 import { authenticationGroup } from "./authentication-group.js";

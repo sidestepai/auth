@@ -4,7 +4,7 @@
  * name is kept verbatim (it seeds the derived guid). Identity is left to the
  * consumer's `xano.lock` or the deterministic name-derivation.
  */
-import { defineFunction, input, s, c, inp } from "xanots";
+import { defineFunction, input, s, c, inp } from "@xanots/core";
 import { eventLogTable } from "../tables/event-log.js";
 
 export const createEventLogFn = defineFunction({

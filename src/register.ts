@@ -9,7 +9,7 @@
  *   `auth: true` resolves at export() to the single registered auth table.
  * - Do not additionally pass this package's defs to your own register* calls.
  */
-import type { Xano } from "xanots";
+import type { Xano } from "@xanots/core";
 import { userTable } from "./tables/user.js";
 import { accountTable } from "./tables/account.js";
 import { eventLogTable } from "./tables/event-log.js";

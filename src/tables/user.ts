@@ -7,7 +7,7 @@
  * `id` / `created_at` and the `primary(id)` / `btree(created_at desc)` indexes
  * are the engine's system defaults — auto-injected, not declared here.
  */
-import { table, f } from "xanots";
+import { table, f } from "@xanots/core";
 import { accountTable } from "./account.js";
 
 export const userTable = table({
