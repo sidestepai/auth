@@ -113,15 +113,14 @@ changes encoding, this test fails before consumers are affected.
 ## Packaging and publishing [reusable]
 
 - ESM-only (`"type": "module"`), `tsup` build (esm + dts), `files: ["dist", "README.md"]`.
-- `xanots` in **both** `peerDependencies` (pinned to the **exact** version the
-  golden fixture was generated against) and `devDependencies` (for tests).
-  Exact pinning matters doubly for prerelease peers: npm semver ranges do not
-  match across prerelease tuples, so `>=0.0.2-beta.2 <1.0.0` stops resolving
-  the moment xanots rolls to `0.0.3-beta.0`.
-- Release in lockstep: bump the peer pin, regenerate + review the golden
-  fixture, then `npm version prerelease --preid=beta && npm publish --tag beta`.
-- Document the tested peer version in the README install command — consumers
-  should install the exact version, not a dist-tag.
+- `xanots` in **both** `peerDependencies` (a `^1.0.0` caret range against the
+  stable major the golden fixture was generated against) and `devDependencies`
+  (for tests). The golden-bundle test is the safety net: any minor/patch that
+  actually changes encoding fails it before consumers are affected.
+- Regenerate + review the golden fixture whenever you bump the tested xanots
+  version, then `npm publish`.
+- The README install command stays version-free (`npm install @xanots/core`) —
+  consumers get the current stable release resolved by the caret peer range.
 - During local development against an unpublished xanots build, point the
   devDependency at a packed tarball (`file:../xanots/xanots-<version>.tgz`);
   switch to the registry version before release so the README quickstart is
