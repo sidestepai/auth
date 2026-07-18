@@ -18,13 +18,12 @@ upstream work.
 ## Install
 
 ```bash
-npm install @xanots/auth @xanots/core@0.0.2-beta.4
+npm install @xanots/auth @xanots/core
 ```
 
-Pin the **exact** xanots version shown — it is the version this release's
-golden-bundle contract was verified against. (Prerelease semver ranges and the
-moving `@beta` dist-tag both break or drift across beta tuples; each
-`@xanots/auth` release documents its tested peer.)
+xanots is a `^1.0.0` peer dependency — install the current stable release. This
+package's golden-bundle test is the peer-drift tripwire: if a xanots upgrade
+changes encoding, it fails here before consumers are affected.
 
 ## Quickstart
 

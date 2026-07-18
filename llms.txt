@@ -15,13 +15,12 @@ the consuming project's `xano.lock`, or falls back to `md5("<kind>:<name>")`.
 ## Install
 
 ```bash
-npm install @xanots/auth @xanots/core@0.0.2-beta.4
+npm install @xanots/auth @xanots/core
 ```
 
-Pin the **exact** `@xanots/core` version shown — it is the version this release's
-golden-bundle contract was verified against. Prerelease semver ranges and the
-`@beta` dist-tag both drift across beta tuples. Each release documents its tested
-peer in the README.
+`@xanots/core` is a `^1.0.0` peer dependency — install the current stable
+release. The golden-bundle test in this package is the peer-drift tripwire: if a
+core upgrade changes encoding, it fails here before consumers are affected.
 
 ## Quickstart
 
