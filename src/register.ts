@@ -3,10 +3,10 @@
  * queries) onto a consumer's `Xano` instance.
  *
  * Constraints (enforced/documented):
- * - Call it once per instance — a second call would register duplicate defs,
- *   and duplicate auth tables make `export()` throw. Guarded by a WeakSet.
- * - The consumer must not register another `auth: true` table: `auth/me`'s
- *   `auth: true` resolves at export() to the single registered auth table.
+ * - Call it once per instance — a second call would register duplicate defs.
+ *   Guarded by a WeakSet.
+ * - The consumer may register their own `auth: true` table alongside this one:
+ *   `auth/me` names the ported `user` table, so it is unaffected.
  * - Do not additionally pass this package's defs to your own register* calls.
  */
 import type { Xano } from "@sidestep/core";
@@ -67,7 +67,7 @@ export function registerAuth<X extends Xano>(xano: X, opts: RegisterAuthOptions 
   if (installed.has(xano)) {
     throw new Error(
       "registerAuth: already called on this Xano instance. Register the auth set once — " +
-        "a second registration duplicates defs and makes export() fail on multiple auth tables.",
+        "a second registration duplicates every def in the exported bundle.",
     );
   }
 

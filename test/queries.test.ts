@@ -147,7 +147,8 @@ describe("auth/me", () => {
   it("is an authenticated GET with an empty input block", () => {
     expect(q.verb).toBe("GET");
     expect(meQuery.guid).toBeUndefined();
-    expect(q.auth).toBe(true);
+    // core >= 3.0.0 resolves a query's `auth` table def to that table's guid.
+    expect(q.auth).toBe(GUIDS.user);
     expect(q.input).toEqual([]);
   });
 

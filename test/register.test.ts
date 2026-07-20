@@ -1,7 +1,7 @@
 /**
  * registerAuth / export-surface behavior on a consumer `Xano` instance:
  * turnkey install, granular registration, auth-table resolution, and the
- * guard rails (double-install, second auth table).
+ * guard rails (double-install, coexisting consumer auth table).
  */
 import { describe, it, expect } from "vitest";
 import { Xano, table, f, seedLockOverrides, emptyLock, lockKey } from "@sidestep/core";
@@ -65,7 +65,7 @@ describe("registerAuth (turnkey install)", () => {
     expect(bundle.payload.app[0]?.canonical).toBe("");
   });
 
-  it("resolves auth/me's auth:true to the ported user table's guid", () => {
+  it("resolves auth/me's auth table ref to the ported user table's guid", () => {
     const bundle = registerAuth(freshInstance()).export() as unknown as Bundle;
     const me = bundle.payload.query.find((q) => q.name === "auth/me");
     expect(me?.auth).toBe(GUIDS.user);
@@ -106,11 +106,23 @@ describe("granular registration", () => {
   });
 });
 
-describe("single-auth-table constraint (documented, pinned by test)", () => {
-  it("export throws when the consumer registers a second auth table", () => {
+describe("coexistence with a consumer's own auth table (core >= 3.0.0)", () => {
+  // Core used to allow exactly one auth table, because a query's `auth: true`
+  // had nothing else to resolve against. 3.0.0 binds `auth` to a named table,
+  // so a consumer may register their own alongside `user` — pinned here so a
+  // regression to the old single-table coupling fails in this package first.
+  it("exports cleanly and keeps auth/me bound to the ported user table", () => {
     const second = table({ name: "admin_user", auth: true, schema: { email: f.email() } });
-    const xano = registerAuth(freshInstance()).registerTables([second]);
-    expect(() => xano.export()).toThrow();
+    const bundle = registerAuth(freshInstance())
+      .registerTables([second])
+      .export() as unknown as Bundle;
+    expect(bundle.payload.dbo.map((d) => d.name).sort()).toEqual([
+      "account",
+      "admin_user",
+      "event_log",
+      "user",
+    ]);
+    expect(bundle.payload.query.find((q) => q.name === "auth/me")?.auth).toBe(GUIDS.user);
   });
 });
 
