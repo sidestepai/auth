@@ -9,7 +9,7 @@
  * auth table — the consumer must register exactly one (the ported `user`).
  */
 import { query, s, ref, auth, c } from "@sidestep/core";
-import { userTable } from "../tables/user.js";
+import { userTable, type PublicUser } from "../tables/user.js";
 import { createEventLogFn } from "../functions/create-event-log.js";
 import { authenticationGroup } from "./authentication-group.js";
 
@@ -43,4 +43,8 @@ export const meQuery = query({
     }),
   ],
   response: ref("user"),
+  // The static walk derives the `output` projection but assumes the row exists.
+  // This endpoint has no null-user precondition (see the header note), so a
+  // valid token for a deleted user yields a null body — widen to match.
+  responseShape: null as PublicUser | null,
 });

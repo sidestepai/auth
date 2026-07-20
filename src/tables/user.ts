@@ -7,7 +7,7 @@
  * `id` / `created_at` and the `primary(id)` / `btree(created_at desc)` indexes
  * are the engine's system defaults — auto-injected, not declared here.
  */
-import { table, f } from "@sidestep/core";
+import { table, f, type InferRow } from "@sidestep/core";
 import { accountTable } from "./account.js";
 
 export const userTable = table({
@@ -44,3 +44,16 @@ export const userTable = table({
   },
   index: [{ type: "btree|unique", fields: [{ name: "email", op: "asc" }] }],
 });
+
+/** The full `user` row, including the `internal`-access `password` hash. */
+export type User = InferRow<typeof userTable>;
+
+/**
+ * The user projection the auth endpoints actually hand back — the `output` list
+ * shared by `auth/me` and `auth/login`'s post-check reads, minus the password
+ * hash. Keep in sync with those statements' `output` arrays.
+ */
+export type PublicUser = Pick<
+  User,
+  "id" | "created_at" | "name" | "email" | "account_id" | "role"
+>;

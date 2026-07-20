@@ -9,8 +9,9 @@
 A sidestep extension package exports plain, typed def objects (the factories
 `table()`, `query()`, `defineFunction()`, `apiGroup()` are pure identity
 functions). The *consumer's* `Xano` instance does all registration and encoding
-via `export()`. This package pins no guids and no canonical — identity comes from
-the consuming project's `xano.lock`, or falls back to `md5("<kind>:<name>")`.
+via `export()`. This package pins no guids, and no canonical unless you pass one
+to `registerAuth` — otherwise identity comes from the consuming project's
+`xano.lock`, or falls back to `md5("<kind>:<name>")`.
 
 ## Install
 
@@ -18,7 +19,7 @@ the consuming project's `xano.lock`, or falls back to `md5("<kind>:<name>")`.
 npm install @sidestep/auth @sidestep/core
 ```
 
-`@sidestep/core` is a `^1.0.0` peer dependency — install the current stable
+`@sidestep/core` is a `^2.4.0` peer dependency — install the current stable
 release. The golden-bundle test in this package is the peer-drift tripwire: if a
 core upgrade changes encoding, it fails here before consumers are affected.
 
@@ -29,7 +30,9 @@ core upgrade changes encoding, it fails here before consumers are affected.
 import { workspace } from "@sidestep/core";
 import { registerAuth } from "@sidestep/auth";
 
-export default registerAuth(workspace("my-app"));
+// Pin `canonical` to make getPath() resolve client-side with no lock file;
+// omit the options object to leave the canonical to the consumer's xano.lock.
+export default registerAuth(workspace("my-app"), { canonical: "authn" });
 ```
 
 ```bash
@@ -38,11 +41,59 @@ npx sidestep export   # → importable workspace bundle
 
 ## Exports
 
-- `registerAuth(xano)` — one-call install of the full set; returns the instance
-  for chaining. Idempotency-guarded (throws on a second call per instance).
+- `registerAuth(xano, opts?)` — one-call install of the full set; returns the
+  instance for chaining. Idempotency-guarded (throws on a second call per
+  instance). `opts.canonical` pins the Authentication group's URL segment (see
+  the getPath note below); omit it to leave identity to the consumer's lock.
 - Tables: `userTable` (auth table), `accountTable`, `eventLogTable`
 - Function: `createEventLogFn`
 - API: `authenticationGroup`, `signupQuery`, `loginQuery`, `meQuery`
+- Types (erase at compile time — `import type` costs no bundle bytes):
+  `User`, `PublicUser`, `Account`, `EventLog`, `AuthTokenResponse`,
+  `RegisterAuthOptions`
+
+## Calling the endpoints from a typed client
+
+Every query carries its own route and payload types, so a frontend reuses the
+def instead of re-typing URLs and bodies. All three responses are fully
+resolved — no `unknown`:
+
+```ts
+import { loginQuery, meQuery, type AuthTokenResponse } from "@sidestep/auth";
+import type { InferInput, InferResponse } from "@sidestep/core";
+
+type LoginBody = InferInput<typeof loginQuery>;      // { email?: string; password?: string }
+type LoginOut  = InferResponse<typeof loginQuery>;   // AuthTokenResponse
+type MeOut     = InferResponse<typeof meQuery>;      // PublicUser | null
+
+const BASE = "https://your-instance.xano.io";   // registerAuth pinned the canonical
+
+const res = await fetch(BASE + loginQuery.getPath(), {
+  method: loginQuery.verb,                            // "POST"
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password } satisfies LoginBody),
+});
+const { authToken }: LoginOut = await res.json();
+```
+
+`signup`/`login` declare `responseShape: AuthTokenResponse` because the token is
+minted by a statement (opaque to the static walk). `meQuery` declares
+`PublicUser | null` — the `| null` is the faithful-port quirk below, not an
+oversight, so callers are forced to handle a deleted-user token.
+
+**`getPath()` needs a canonical.** It builds `/api:<canonical>/<name>`, and by
+default this package pins none (identity is the consumer's lock). A canonical
+can't be minted on demand — it must be unique per instance — so a **bare
+`getPath()` throws** unless one is supplied. Preferred: pin it at registration,
+`registerAuth(workspace("my-app"), { canonical: "authn" })`, which makes the
+deployed path and the client-derived path one value and needs no lock in the
+browser (an in-code canonical beats the lock; it must match `[A-Za-z0-9_-]+`,
+and re-pinning it to a different value throws rather than retargeting a
+workspace registered earlier in the same process). Otherwise pass it per call,
+`getPath({ canonical })`, or seed the lock once at startup with
+`seedLockOverrides(readLockFile("./xano.lock"))` — `readLockFile` comes from the
+Node-only `@sidestep/core/node` entry. Run `npx sidestep export --lock` once to
+mint and freeze the canonical.
 
 Cherry-pick individual defs instead of `registerAuth` for granular control; keep
 each def's dependencies together (queries need `userTable`; `createEventLogFn`

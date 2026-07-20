@@ -3,13 +3,15 @@
  * turnkey install, granular registration, auth-table resolution, and the
  * guard rails (double-install, second auth table).
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Xano, table, f } from "@sidestep/core";
 import {
   registerAuth,
   userTable,
   authenticationGroup,
   loginQuery,
+  meQuery,
+  signupQuery,
   createEventLogFn,
   accountTable,
   eventLogTable,
@@ -109,5 +111,54 @@ describe("single-auth-table constraint (documented, pinned by test)", () => {
     const second = table({ name: "admin_user", auth: true, schema: { email: f.email() } });
     const xano = registerAuth(freshInstance()).registerTables([second]);
     expect(() => xano.export()).toThrow();
+  });
+});
+
+describe("registerAuth ({ canonical }) — issue #2", () => {
+  // `authenticationGroup` is a module singleton, so every test here mutates
+  // shared state; restore the unpinned default between cases or the assertions
+  // below (and the identity invariants elsewhere) leak into each other.
+  beforeEach(() => {
+    delete authenticationGroup.canonical;
+  });
+  afterEach(() => {
+    delete authenticationGroup.canonical;
+  });
+
+  it("pins the group's canonical so a bare getPath() resolves with no lock", () => {
+    const xano = registerAuth(freshInstance(), { canonical: "authn" });
+    // The deployed path and the client-derived path agree — the point of #2.
+    const app = (xano.export() as unknown as Bundle).payload.app[0] as unknown as {
+      canonical: string;
+    };
+    expect(app.canonical).toBe("authn");
+    expect(loginQuery.getPath()).toBe("/api:authn/auth/login");
+    expect(meQuery.getPath()).toBe("/api:authn/auth/me");
+    expect(signupQuery.getPath()).toBe("/api:authn/auth/signup");
+  });
+
+  it("leaves the canonical unpinned when no option is passed", () => {
+    registerAuth(freshInstance());
+    expect(authenticationGroup.canonical).toBeUndefined();
+  });
+
+  it("rejects a canonical that is not a url-safe segment, without mutating the def", () => {
+    for (const bad of ["", "auth/n", "auth n", "auth?x", "authn!"]) {
+      expect(() => registerAuth(freshInstance(), { canonical: bad })).toThrow(
+        /not a valid URL segment/,
+      );
+      expect(authenticationGroup.canonical).toBeUndefined();
+    }
+  });
+
+  it("accepts re-pinning the same value, but refuses a conflicting one", () => {
+    registerAuth(freshInstance(), { canonical: "authn" });
+    // Same value on another instance is a no-op, not an error.
+    expect(() => registerAuth(freshInstance(), { canonical: "authn" })).not.toThrow();
+    // A different value would silently retarget the first workspace's group.
+    expect(() => registerAuth(freshInstance(), { canonical: "other" })).toThrow(
+      /already pinned to "authn"/,
+    );
+    expect(authenticationGroup.canonical).toBe("authn");
   });
 });

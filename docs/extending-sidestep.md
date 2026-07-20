@@ -113,7 +113,7 @@ changes encoding, this test fails before consumers are affected.
 ## Packaging and publishing [reusable]
 
 - ESM-only (`"type": "module"`), `tsup` build (esm + dts), `files: ["dist", "README.md"]`.
-- `sidestep` in **both** `peerDependencies` (a `^1.0.0` caret range against the
+- `sidestep` in **both** `peerDependencies` (a `^2.4.0` caret range against the
   stable major the golden fixture was generated against) and `devDependencies`
   (for tests). The golden-bundle test is the safety net: any minor/patch that
   actually changes encoding fails it before consumers are affected.

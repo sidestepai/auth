@@ -3,8 +3,16 @@
  * signup/login/me queries — stack order, byte-exact error contract, token
  * expiration, output column selection, and response shapes.
  */
-import { describe, it, expect } from "vitest";
-import { encodeQuery, encodeApiGroup, deriveGuid } from "@sidestep/core";
+import { describe, it, expect, afterEach } from "vitest";
+import {
+  encodeQuery,
+  encodeApiGroup,
+  deriveGuid,
+  seedLockOverrides,
+  resetLockOverrides,
+  emptyLock,
+  lockKey,
+} from "@sidestep/core";
 import { authenticationGroup } from "../src/api/authentication-group.js";
 import { signupQuery } from "../src/api/signup.js";
 import { loginQuery } from "../src/api/login.js";
@@ -180,5 +188,35 @@ describe("identity invariants", () => {
 
   it("the group binding resolves to the name-derived guid when no lock is seeded", () => {
     expect(encodeQuery(signupQuery).app.id).toBe(deriveGuid("app", "Authentication"));
+  });
+});
+
+describe("getPath() canonical resolution", () => {
+  // This package pins no canonical, so `getPath()` has nothing to resolve until
+  // the consumer supplies one. These assertions pin the two documented paths
+  // (README › "Resolving the path") — the bare-call throw is the behavior the
+  // docs must keep warning about, not a bug to paper over.
+  afterEach(() => resetLockOverrides());
+
+  it("throws when no canonical is available", () => {
+    resetLockOverrides();
+    for (const q of [signupQuery, loginQuery, meQuery]) {
+      expect(() => q.getPath()).toThrow(/canonical/i);
+    }
+  });
+
+  it("resolves from an explicit per-call canonical", () => {
+    expect(loginQuery.getPath({ canonical: "a1b2c3d4" })).toBe("/api:a1b2c3d4/auth/login");
+    expect(meQuery.getPath({ canonical: "a1b2c3d4" })).toBe("/api:a1b2c3d4/auth/me");
+  });
+
+  it("resolves from a seeded lock, so a bare getPath() works", () => {
+    const lock = emptyLock();
+    const key = lockKey("app", "Authentication");
+    lock.objects[key] = { ...(lock.objects[key] ?? {}), canonical: "zz99xx88" };
+    seedLockOverrides(lock);
+    expect(signupQuery.getPath()).toBe("/api:zz99xx88/auth/signup");
+    expect(loginQuery.getPath()).toBe("/api:zz99xx88/auth/login");
+    expect(meQuery.getPath()).toBe("/api:zz99xx88/auth/me");
   });
 });
