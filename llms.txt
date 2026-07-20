@@ -20,8 +20,10 @@ npm install @sidestep/auth @sidestep/core
 ```
 
 `@sidestep/core` is a `^2.4.0` peer dependency — install the current stable
-release. The golden-bundle test in this package is the peer-drift tripwire: if a
-core upgrade changes encoding, it fails here before consumers are affected.
+release. Built and tested against 2.5.1. The golden-bundle test in this package
+is the peer-drift tripwire: if a core upgrade changes encoding, it fails here
+before consumers are affected (for the installed version — the rest of the caret
+range is declared, not CI-verified).
 
 ## Quickstart
 
@@ -51,14 +53,20 @@ npx sidestep export   # → importable workspace bundle
 - Types (erase at compile time — `import type` costs no bundle bytes):
   `User`, `PublicUser`, `Account`, `EventLog`, `AuthTokenResponse`,
   `RegisterAuthOptions`
+- `PUBLIC_USER_FIELDS` — the runtime array `auth/me` selects; `PublicUser` is
+  `Pick<User, typeof PUBLIC_USER_FIELDS[number]>`, so the two cannot drift.
 
 ## Calling the endpoints from a typed client
 
 Every query carries its own route and payload types, so a frontend reuses the
-def instead of re-typing URLs and bodies. All three responses are fully
-resolved — no `unknown`:
+def instead of re-typing URLs and bodies. Request types are derived; all three
+responses are fully resolved — no `unknown` — but via hand-declared
+`responseShape`s, not derivation:
 
 ```ts
+// Evaluating the module that calls registerAuth is what pins the canonical;
+// without it the bare getPath() below throws. Or use getPath({ canonical }).
+import "./xano/index.js";
 import { loginQuery, meQuery, type AuthTokenResponse } from "@sidestep/auth";
 import type { InferInput, InferResponse } from "@sidestep/core";
 
@@ -66,7 +74,7 @@ type LoginBody = InferInput<typeof loginQuery>;      // { email?: string; passwo
 type LoginOut  = InferResponse<typeof loginQuery>;   // AuthTokenResponse
 type MeOut     = InferResponse<typeof meQuery>;      // PublicUser | null
 
-const BASE = "https://your-instance.xano.io";   // registerAuth pinned the canonical
+const BASE = "https://your-instance.xano.io";
 
 const res = await fetch(BASE + loginQuery.getPath(), {
   method: loginQuery.verb,                            // "POST"
@@ -79,7 +87,9 @@ const { authToken }: LoginOut = await res.json();
 `signup`/`login` declare `responseShape: AuthTokenResponse` because the token is
 minted by a statement (opaque to the static walk). `meQuery` declares
 `PublicUser | null` — the `| null` is the faithful-port quirk below, not an
-oversight, so callers are forced to handle a deleted-user token.
+oversight, so callers are forced to handle a deleted-user token. A declared
+shape overrides derivation and is not cross-checked against the stack, so all
+three are a hand-maintained contract.
 
 **`getPath()` needs a canonical.** It builds `/api:<canonical>/<name>`, and by
 default this package pins none (identity is the consumer's lock). A canonical
@@ -88,8 +98,11 @@ can't be minted on demand — it must be unique per instance — so a **bare
 `registerAuth(workspace("my-app"), { canonical: "authn" })`, which makes the
 deployed path and the client-derived path one value and needs no lock in the
 browser (an in-code canonical beats the lock; it must match `[A-Za-z0-9_-]+`,
-and re-pinning it to a different value throws rather than retargeting a
-workspace registered earlier in the same process). Otherwise pass it per call,
+and because the group def is process-wide, once pinned every later
+`registerAuth` must pass the same value — a different value *or* an omitted one
+throws, rather than retargeting or being silently inherited by a workspace
+registered earlier. Uniqueness across the instance's API groups is the caller's
+responsibility; a collision surfaces at Xano import). Otherwise pass it per call,
 `getPath({ canonical })`, or seed the lock once at startup with
 `seedLockOverrides(readLockFile("./xano.lock"))` — `readLockFile` comes from the
 Node-only `@sidestep/core/node` entry. Run `npx sidestep export --lock` once to

@@ -3,17 +3,10 @@
  * signup/login/me queries — stack order, byte-exact error contract, token
  * expiration, output column selection, and response shapes.
  */
-import { describe, it, expect, afterEach } from "vitest";
-import {
-  encodeQuery,
-  encodeApiGroup,
-  deriveGuid,
-  seedLockOverrides,
-  resetLockOverrides,
-  emptyLock,
-  lockKey,
-} from "@sidestep/core";
+import { describe, it, expect } from "vitest";
+import { encodeQuery, encodeApiGroup, deriveGuid, seedLockOverrides, emptyLock, lockKey } from "@sidestep/core";
 import { authenticationGroup } from "../src/api/authentication-group.js";
+import { PUBLIC_USER_FIELDS } from "../src/tables/user.js";
 import { signupQuery } from "../src/api/signup.js";
 import { loginQuery } from "../src/api/login.js";
 import { meQuery } from "../src/api/me.js";
@@ -162,13 +155,17 @@ describe("auth/me", () => {
     const get = run(q)[0]!;
     expect(inputEntry(get, "field_name")?.value).toBe("id");
     expect(inputEntry(get, "field_value")).toMatchObject({ value: "id", tag: "auth" });
-    expect(get.output?.items.map((i) => i.name)).toEqual([
-      "id", "created_at", "name", "email", "account_id", "role",
-    ]);
+    // Asserted against the exported array, not a copy: `PublicUser` derives
+    // from the same constant, so the type and the selected columns cannot drift.
+    expect(get.output?.items.map((i) => i.name)).toEqual([...PUBLIC_USER_FIELDS]);
     expect(get.output?.items.some((i) => i.name === "password")).toBe(false);
   });
 
-  it("has NO null-user precondition (deleted-user tokens yield a null 200) and logs the read", () => {
+  it("has NO null-user precondition and logs the read", () => {
+    // Only the absence of a precondition is asserted here — the *observable*
+    // deleted-user outcome (null 200 vs. an error out of the event_log write,
+    // whose user_id/account_id inputs are required) is unverified against a live
+    // instance and deliberately not claimed. See the note in src/api/me.ts.
     expect(run(q).map((s) => s.name)).toEqual(["mvp:dbo_getby", "mvp:function"]);
     expect(inputEntry(run(q)[1]!, "action")?.value).toBe("get_auth_user");
   });
@@ -191,15 +188,27 @@ describe("identity invariants", () => {
   });
 });
 
+describe("responseShape is compile-time only", () => {
+  // The declared shapes carry real runtime values (`{}` for signup/login, `null`
+  // for me). Core reads only their type today, but if a future version started
+  // serializing unknown def keys those values would land in the XanoScript — a
+  // silent, deploy-breaking contract change. Pin it out of the payload.
+  it("never reaches the encoded query", () => {
+    for (const query of [signupQuery, loginQuery, meQuery]) {
+      expect(Object.keys(encodeQuery(query))).not.toContain("responseShape");
+      expect(JSON.stringify(encodeQuery(query))).not.toContain("responseShape");
+    }
+  });
+});
+
 describe("getPath() canonical resolution", () => {
   // This package pins no canonical, so `getPath()` has nothing to resolve until
   // the consumer supplies one. These assertions pin the two documented paths
   // (README › "Resolving the path") — the bare-call throw is the behavior the
-  // docs must keep warning about, not a bug to paper over.
-  afterEach(() => resetLockOverrides());
+  // docs must keep warning about, not a bug to paper over. Both the lock
+  // overrides and the group's canonical are reset in `test/setup.ts`.
 
   it("throws when no canonical is available", () => {
-    resetLockOverrides();
     for (const q of [signupQuery, loginQuery, meQuery]) {
       expect(() => q.getPath()).toThrow(/canonical/i);
     }

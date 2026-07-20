@@ -11,7 +11,12 @@ import type { User } from "../tables/user.js";
 
 /** What `auth/signup` and `auth/login` hand back on success. */
 export type AuthTokenResponse = {
-  /** The minted bearer token — 24h lifetime, no refresh or revocation. */
+  /**
+   * The minted bearer token — 24h lifetime (`expiration: 86400`); this package
+   * ships no refresh or revocation endpoint. `string` is assumed of
+   * `security.create_auth_token`, not derived: nothing in core pins that
+   * statement's return type.
+   */
   authToken: string;
   /** The authenticated user's primary key. */
   user_id: User["id"];

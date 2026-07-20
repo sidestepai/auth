@@ -23,8 +23,9 @@ npm install @sidestep/auth @sidestep/core
 ```
 
 sidestep is a `^2.4.0` peer dependency — install the current stable release. This
-package's golden-bundle test is the peer-drift tripwire: if a sidestep upgrade
-changes encoding, it fails here before consumers are affected.
+package is built and tested against **2.5.1**; the golden-bundle test is the
+peer-drift tripwire, but it only ever exercises the installed version, so the
+rest of the declared range is supported-by-caret rather than verified in CI.
 
 ## Quickstart
 
@@ -127,10 +128,15 @@ role }` (never `password`). Logs a `get_auth_user` event.
 
 Each query is a def that knows its own route, verb, request payload, and
 response shape, so the code that *calls* the API reuses the def instead of
-re-typing URLs and bodies. Nothing here is codegen — the types are derived and
-always in sync.
+re-typing URLs and bodies. Nothing here is codegen. The *request* types are
+derived from each def and cannot drift; the three *response* types are
+hand-declared (see **Declared response shapes** below), because a static walk of
+the stack can't see through them.
 
 ```ts
+// Importing the module that calls registerAuth is what pins the canonical —
+// without it, the bare getPath() calls below throw. See "Resolving the path".
+import "./xano/index.js";
 import { loginQuery, meQuery } from "@sidestep/auth";
 import type { InferInput, InferResponse } from "@sidestep/core";
 
@@ -177,16 +183,30 @@ export default registerAuth(workspace("my-app"), { canonical: "authn" });
 ```
 
 ```ts
-// anywhere, including a browser bundle
+// anywhere downstream of that module — including a browser bundle
+import "./xano/index.js";    // evaluating it is what sets the canonical
+import { loginQuery } from "@sidestep/auth";
+
 loginQuery.getPath();        // → /api:authn/auth/login
 ```
 
+The pin is a side effect of `registerAuth` running, so the registering module
+must actually be *evaluated* in that module graph — importing the defs alone is
+not enough. Note the tradeoff: pulling `xano/index.ts` into a browser bundle also
+pulls in `workspace()` and every def with its full statement stack. To keep that
+weight out of the client, pass the segment per call instead —
+`loginQuery.getPath({ canonical: "authn" })` — which needs no registration.
+
 An in-code canonical takes precedence over the lock, so the deployed path and
 the client-derived path are the same value from one source. It must be a
-url-safe segment (`[A-Za-z0-9_-]+`) and unique across the instance's API groups;
-`registerAuth` rejects anything else rather than emitting a broken path. Because
-the group def is shared process-wide, re-pinning it to a *different* value also
-throws instead of silently retargeting a workspace registered earlier.
+url-safe segment (`[A-Za-z0-9_-]+`); `registerAuth` rejects anything else rather
+than emitting a broken path. It must *also* be unique across the instance's API
+groups — that one `registerAuth` cannot check, since it sees only this group, so
+a collision surfaces at Xano import time rather than at registration. Because the
+group def is shared process-wide, once it is pinned every later `registerAuth` in
+the same process must pass the same value: a *different* value throws instead of
+silently retargeting the workspace registered earlier, and *omitting* the option
+throws too rather than letting that workspace silently inherit the segment.
 
 If you'd rather let the lock own identity, the two lock-based paths still work:
 
@@ -207,18 +227,28 @@ loginQuery.getPath();                            // → /api:<locked canonical>/
 Run `npx sidestep export --lock` once to mint the canonical and freeze it in
 `xano.lock`, then commit that file.
 
-Two of the three responses are declared rather than inferred, because a static
-walk of the stack can't see through them:
+### Declared response shapes
+
+All three responses are declared via `responseShape` rather than inferred,
+because a static walk of the stack can't see through them. A declared shape wins
+over derivation and the compiler does not cross-check it against the stack, so
+treat these as a hand-maintained contract:
 
 - **`signup` / `login`** → `AuthTokenResponse` (`{ authToken, user_id }`). The
   token is minted by `security.create_auth_token`, so its type isn't readable
-  off a table.
-- **`me`** → `PublicUser | null`. The `| null` is deliberate: this endpoint has
-  no null-user precondition, so a valid token whose user row was deleted returns
-  a `null` body with HTTP 200. The type forces callers to handle it.
+  off a table. Without the declaration both values derive as `unknown`.
+- **`me`** → `PublicUser | null`. This endpoint has deliberately no null-user
+  precondition, so a token whose user row was deleted is not guaranteed to
+  produce a user; the `| null` forces callers to handle its absence. (The exact
+  outcome on that path — null body vs. an error from the `event_log` write — is
+  not yet verified against a live instance; see the note in `src/api/me.ts`.)
+
+`PublicUser` itself is derived from the exported `PUBLIC_USER_FIELDS` array,
+which is also the `output` list of `auth/me`'s read — so the type and the
+selected columns move together.
 
 The package also exports the table row types — `User` (includes the password
-hash), `PublicUser` (the projection the endpoints return), `Account`, and
+hash), `PublicUser` (the projection `auth/me` returns), `Account`, and
 `EventLog`. Types erase at compile time, so `import type` adds no bundle bytes.
 
 ## Behavior notes (read before production)

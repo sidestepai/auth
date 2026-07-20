@@ -45,9 +45,15 @@ export interface RegisterAuthOptions {
    * loginQuery.getPath();   // → /api:authn/auth/login
    * ```
    *
-   * Must be a url-safe segment (`[A-Za-z0-9_-]+`) and must be unique per Xano
-   * instance across all workspaces — reusing another group's canonical collides
-   * at import.
+   * Must be a url-safe segment (`[A-Za-z0-9_-]+`); `registerAuth` rejects
+   * anything else. It must *also* be unique per Xano instance across all
+   * workspaces, which `registerAuth` cannot check — it sees only this group, so
+   * a collision with an unrelated group surfaces at import, not here.
+   *
+   * The group def is a process-wide singleton, so once any `registerAuth` pins
+   * it, every later call in the same process must pass the same value; both a
+   * conflicting value and an omitted one throw rather than silently retarget or
+   * inherit.
    */
   canonical?: string;
 }
@@ -67,18 +73,36 @@ export function registerAuth<X extends Xano>(xano: X, opts: RegisterAuthOptions 
 
   // Validate before mutating anything, so a bad call leaves no partial state.
   const { canonical } = opts;
-  if (canonical !== undefined) {
-    if (!CANONICAL_PATTERN.test(canonical)) {
+  // `authenticationGroup` is a module singleton shared by every instance in the
+  // process, so whatever an earlier `registerAuth` pinned is still on the def.
+  const prior = authenticationGroup.canonical;
+
+  if (canonical === undefined) {
+    // Omitting the option does NOT unpin: this workspace would silently inherit
+    // the earlier one's segment and ship it in its own bundle, producing exactly
+    // the per-instance collision the explicit-conflict guard below prevents.
+    if (prior !== undefined) {
+      throw new Error(
+        `registerAuth: the Authentication group's canonical is already pinned to ${JSON.stringify(prior)} ` +
+          "by an earlier registerAuth() in this process, and the group def is shared process-wide — this " +
+          "workspace would inherit that segment rather than its own lock-derived one, colliding at import. " +
+          `Pass { canonical: ${JSON.stringify(prior)} } to accept it deliberately, or build the workspaces ` +
+          "in separate processes.",
+      );
+    }
+  } else {
+    // `RegExp.test` stringifies its argument, so a non-string (a JS consumer, or
+    // a canonical read out of untyped JSON/env config) would pass the pattern and
+    // then be stored unconverted. Check the type first.
+    if (typeof canonical !== "string" || !CANONICAL_PATTERN.test(canonical)) {
       throw new Error(
         `registerAuth: canonical ${JSON.stringify(canonical)} is not a valid URL segment — ` +
-          "it must be non-empty and match [A-Za-z0-9_-]+ (the alphabet Xano mints). " +
+          "it must be a non-empty string matching [A-Za-z0-9_-]+ (the alphabet Xano mints). " +
           'It becomes the "<canonical>" in /api:<canonical>/auth/login.',
       );
     }
-    // `authenticationGroup` is a module singleton shared by every instance in
-    // the process, so a second, differing canonical would silently retarget the
-    // group already registered elsewhere. Surface that instead.
-    const prior = authenticationGroup.canonical;
+    // A second, differing canonical would silently retarget the group already
+    // registered elsewhere. Surface that instead.
     if (prior !== undefined && prior !== canonical) {
       throw new Error(
         `registerAuth: the Authentication group's canonical is already pinned to ${JSON.stringify(prior)}; ` +
@@ -87,14 +111,28 @@ export function registerAuth<X extends Xano>(xano: X, opts: RegisterAuthOptions 
           "Use one canonical per process, or build the workspaces in separate processes.",
       );
     }
-    authenticationGroup.canonical = canonical;
+  }
+
+  // The pin has to be in place *before* `registerApiGroups`, which snapshots the
+  // group's canonical. So mutate first, then roll back if the chain throws (a
+  // consumer's conflicting table, say) — otherwise a failed call would leave the
+  // process-wide singleton pinned and the corrective retry would report
+  // "already called" instead of the real cause.
+  if (canonical !== undefined) authenticationGroup.canonical = canonical;
+  try {
+    xano
+      .registerTables([userTable, accountTable, eventLogTable])
+      .registerFunctions([createEventLogFn])
+      .registerApiGroups([authenticationGroup])
+      .registerQueries([signupQuery, loginQuery, meQuery]);
+  } catch (err) {
+    if (canonical !== undefined) {
+      if (prior === undefined) delete authenticationGroup.canonical;
+      else authenticationGroup.canonical = prior;
+    }
+    throw err;
   }
 
   installed.add(xano);
-  xano
-    .registerTables([userTable, accountTable, eventLogTable])
-    .registerFunctions([createEventLogFn])
-    .registerApiGroups([authenticationGroup])
-    .registerQueries([signupQuery, loginQuery, meQuery]);
   return xano;
 }

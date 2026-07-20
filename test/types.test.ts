@@ -5,6 +5,11 @@
  * inferred response types are a published API: a core upgrade that changes the
  * static response walk, or an edit to a `db.get` `output` list, should break
  * here rather than silently degrade a consumer's types to `unknown`.
+ *
+ * For that to hold, assertions about a declared `responseShape` must compare
+ * against `InferResponse<Omit<typeof q, "responseShape">>` — the derived result.
+ * Comparing `InferResponse<typeof q>` to the declaration, or `PublicUser` to its
+ * own `Pick<>`, restates a definition against itself and can never fail.
  */
 import { describe, it, expectTypeOf } from "vitest";
 import type { InferInput, InferResponse, InferRow } from "@sidestep/core";
@@ -28,13 +33,16 @@ describe("row types", () => {
     expectTypeOf<User["role"]>().toEqualTypeOf<"admin" | "member">();
   });
 
-  it("PublicUser is the endpoint projection and excludes the password hash", () => {
+  it("PublicUser is exactly what auth/me's stack projects", () => {
+    // The load-bearing assertion: compare against the response the static walk
+    // derives from `me`'s `output` array, with the declared `responseShape`
+    // stripped so derivation is what's actually being tested. Dropping a column
+    // from `api/me.ts` fails here. (Asserting against `Pick<User, "id" | ...>`
+    // would be a verbatim restatement of PublicUser's definition — a tautology
+    // that passes no matter how far the type has drifted from the query.)
+    expectTypeOf<InferResponse<Omit<typeof meQuery, "responseShape">>>().toEqualTypeOf<PublicUser>();
     expectTypeOf<PublicUser>().not.toHaveProperty("password");
     expectTypeOf<PublicUser>().not.toHaveProperty("password_reset");
-    // The columns the auth endpoints' `output` lists actually select.
-    expectTypeOf<PublicUser>().toEqualTypeOf<
-      Pick<User, "id" | "created_at" | "name" | "email" | "account_id" | "role">
-    >();
   });
 
   it("exposes the remaining table rows", () => {
@@ -50,6 +58,21 @@ describe("response types", () => {
     expectTypeOf<InferResponse<typeof loginQuery>>().toEqualTypeOf<AuthTokenResponse>();
     expectTypeOf<AuthTokenResponse["authToken"]>().toEqualTypeOf<string>();
     expectTypeOf<AuthTokenResponse["user_id"]>().toEqualTypeOf<User["id"]>();
+  });
+
+  it("the declared token keys match the keys the stack actually returns", () => {
+    // A declared `responseShape` overrides derivation and is never cross-checked
+    // against the stack, so the assertions above only prove the override works.
+    // The walk *can* see the response object's keys (it just types the values as
+    // `unknown`), so pin the declaration to those — renaming `authToken` in the
+    // query without updating AuthTokenResponse fails here. Value types stay the
+    // declaration's job; a minted token isn't readable off a table.
+    expectTypeOf<
+      keyof InferResponse<Omit<typeof loginQuery, "responseShape">>
+    >().toEqualTypeOf<keyof AuthTokenResponse>();
+    expectTypeOf<
+      keyof InferResponse<Omit<typeof signupQuery, "responseShape">>
+    >().toEqualTypeOf<keyof AuthTokenResponse>();
   });
 
   it("me is nullable — a valid token for a deleted row returns a null body", () => {

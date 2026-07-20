@@ -19,6 +19,7 @@ export { eventLogTable } from "./tables/event-log.js";
  * the bundle. Pair them with each query's `getPath()`/`verb` to call the
  * endpoints without hand-written URLs or payload types.
  */
+export { PUBLIC_USER_FIELDS } from "./tables/user.js";
 export type { User, PublicUser } from "./tables/user.js";
 export type { Account } from "./tables/account.js";
 export type { EventLog } from "./tables/event-log.js";

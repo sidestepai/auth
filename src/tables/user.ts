@@ -49,11 +49,24 @@ export const userTable = table({
 export type User = InferRow<typeof userTable>;
 
 /**
- * The user projection the auth endpoints actually hand back — the `output` list
- * shared by `auth/me` and `auth/login`'s post-check reads, minus the password
- * hash. Keep in sync with those statements' `output` arrays.
+ * The columns `auth/me` selects — the single source of truth for that
+ * statement's `output` array and for {@link PublicUser}, so the two cannot
+ * drift. `auth/login` deliberately reads a *different* list (it adds `password`
+ * for the hash check) and returns no user object at all, so it keeps its own
+ * literal.
  */
-export type PublicUser = Pick<
-  User,
-  "id" | "created_at" | "name" | "email" | "account_id" | "role"
->;
+export const PUBLIC_USER_FIELDS = [
+  "id",
+  "created_at",
+  "name",
+  "email",
+  "account_id",
+  "role",
+] as const satisfies readonly (keyof User)[];
+
+/**
+ * The user projection `auth/me` hands back: {@link PUBLIC_USER_FIELDS}, which
+ * excludes the password hash. Derived from that array, so editing the `output`
+ * list in `api/me.ts` changes this type too.
+ */
+export type PublicUser = Pick<User, (typeof PUBLIC_USER_FIELDS)[number]>;
