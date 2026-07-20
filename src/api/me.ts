@@ -15,8 +15,9 @@
  * code, and do not "fix" the missing precondition without a stated reason — the
  * port's fidelity is the point.
  *
- * `auth: true` resolves at the consumer's `export()` to the single registered
- * auth table — the consumer must register exactly one (the ported `user`).
+ * `auth` names the ported `user` table by def handle (core >= 3.0.0 takes the
+ * auth table itself, not `true`), so it resolves to that table's guid no matter
+ * how many other auth tables the consumer registers.
  */
 import { query, s, ref, auth, c } from "@sidestep/core";
 import { userTable, PUBLIC_USER_FIELDS, type PublicUser } from "../tables/user.js";
@@ -27,7 +28,7 @@ export const meQuery = query({
   name: "auth/me",
   verb: "GET",
   apiGroup: authenticationGroup,
-  auth: true,
+  auth: userTable,
   description: "Get the user record belonging to the authentication token",
   tags: ["xano:quick-start"],
   input: {},

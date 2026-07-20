@@ -19,8 +19,8 @@ to `registerAuth` — otherwise identity comes from the consuming project's
 npm install @sidestep/auth @sidestep/core
 ```
 
-`@sidestep/core` is a `^2.4.0` peer dependency — install the current stable
-release. Built and tested against 2.5.1. The golden-bundle test in this package
+`@sidestep/core` is a `^3.0.0` peer dependency — install the current stable
+release. Built and tested against 3.0.0. The golden-bundle test in this package
 is the peer-drift tripwire: if a core upgrade changes encoding, it fails here
 before consumers are affected (for the installed version — the rest of the caret
 range is declared, not CI-verified).
@@ -114,9 +114,10 @@ needs `eventLogTable`). Never register a def twice.
 
 ## Constraints for agents (read before using)
 
-- **Exactly one auth table.** `userTable` is `auth: true`. Registering another
-  `auth: true` table makes `export()` throw, and `auth/me` resolves `auth: true`
-  to the single registered auth table.
+- **`userTable` is this package's auth table** (`auth: true`), and `auth/me`
+  names it directly (core >= 3.0.0 binds a query's `auth` to a table def, not
+  `true`). A consumer may register their own additional `auth: true` table;
+  these endpoints still authenticate against `user`.
 - **Call `registerAuth` at most once per `Xano` instance** — it throws otherwise.
 - **This is a faithful 1:1 port of Xano's quick-start template**; its quirks are
   preserved on purpose. Notably:
@@ -135,5 +136,5 @@ needs `eventLogTable`). Never register a def twice.
 
 - [README.md](README.md): full endpoint reference, table shapes, and the complete
   "read before production" behavior notes.
-- [docs/extending-sidestep.md](docs/extending-sidestep.md): the pattern for building
-  your own sidestep extension package (this package is the reference).
+- [AGENTS.md](AGENTS.md): the conventions this package holds itself to — the
+  pattern to copy when building your own sidestep extension package.

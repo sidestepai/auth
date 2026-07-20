@@ -6,15 +6,16 @@ the `user`, `account`, and `event_log` tables and the event-log function —
 recreated as typed sidestep defs you can register into any workspace and version
 behind npm.
 
-This package is also the **reference sidestep extension package**: see
-[docs/extending-sidestep.md](docs/extending-sidestep.md) for the pattern it
-establishes (and which parts of it you should copy vs. re-derive).
+This package is also the **reference sidestep extension package** — the source
+layout here (def modules + explicit registration, def-handle references,
+identity left to the consumer's lock, the golden-bundle contract) is the pattern
+to copy when building your own.
 
-**Positioning:** v1 assumes this package provides your workspace's **only**
-auth table — the natural fit is a new project adopting it as primary auth. A
-workspace that already has its own `auth: true` table cannot use `auth/me`
-(export fails on multiple auth tables); the multi-auth-table path is deferred
-upstream work.
+**Positioning:** the natural fit is a new project adopting this as primary
+auth, but it no longer has to be your workspace's only auth table — core 3.0.0
+binds each endpoint to a named auth table, and `auth/me` names the `user` table
+this package ships, so a workspace with its own `auth: true` table can register
+both.
 
 ## Install
 
@@ -22,8 +23,8 @@ upstream work.
 npm install @sidestep/auth @sidestep/core
 ```
 
-sidestep is a `^2.4.0` peer dependency — install the current stable release. This
-package is built and tested against **2.5.1**; the golden-bundle test is the
+sidestep is a `^3.0.0` peer dependency — install the current stable release. This
+package is built and tested against **3.0.0**; the golden-bundle test is the
 peer-drift tripwire, but it only ever exercises the installed version, so the
 rest of the declared range is supported-by-caret rather than verified in CI.
 
@@ -272,8 +273,9 @@ preserved on purpose — changing them here would fork the template's behavior:
   per user is normal; password changes don't invalidate existing tokens.
 - **Signup reveals account existence** ("already in use") — a deliberate
   template behavior; login's failures are indistinguishable.
-- **Exactly one auth table.** Registering another `auth: true` table makes
-  `export()` throw.
+- **Your own auth table may coexist.** `auth/me` names this package's `user`
+  table explicitly, so registering another `auth: true` table is fine — it just
+  isn't what these endpoints authenticate against.
 - **Quick-start naming is visible.** Objects keep their source names and
   `xano:quick-start` tags — you'll see "Getting Started Template/
   create_event_log" in your workspace even if you never installed the
