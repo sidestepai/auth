@@ -3,7 +3,7 @@
  * the Xano quick-start template (`table/account.xs`). Identity is left to the
  * consumer's `xano.lock` (or the deterministic name-derived guid).
  */
-import { table, f } from "@sidestep/core";
+import { table, f, type InferRow } from "@sidestep/core";
 
 export const accountTable = table({
   name: "account",
@@ -23,3 +23,6 @@ export const accountTable = table({
     location: f.text({ methods: ["trim"] }),
   },
 });
+
+/** The full `account` row. */
+export type Account = InferRow<typeof accountTable>;

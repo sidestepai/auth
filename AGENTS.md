@@ -16,7 +16,7 @@ encodes them. Everything is verified at the compiled-output level.
 npm run build       # tsup → dist/ (esm + d.ts)
 npm run typecheck   # tsc --noEmit
 npm run lint        # eslint .
-npm test            # vitest run
+npm test            # tsc --noEmit && vitest run (type-level tests need the typecheck)
 ```
 
 Run `npm run typecheck && npm run lint && npm test` before committing.
@@ -24,7 +24,7 @@ Run `npm run typecheck && npm run lint && npm test` before committing.
 ## Layout
 
 - `src/tables/*.ts`, `src/functions/*.ts`, `src/api/*.ts` — one def per module.
-- `src/register.ts` — `registerAuth(xano)`, the one-call install (idempotency-guarded).
+- `src/register.ts` — `registerAuth(xano, opts?)`, the one-call install (idempotency-guarded).
 - `src/index.ts` — named export per def, plus `registerAuth`.
 - `test/*.test.ts` — encode-level fidelity assertions.
 - `test/bundle.test.ts` + `test/fixtures/golden-bundle.json` — byte-exact bundle contract.
@@ -38,10 +38,17 @@ Run `npm run typecheck && npm run lint && npm test` before committing.
 - **References use def handles, never bare names** — `s.db.get({ table: userTable })`,
   `f.tableRef(accountTable)`, `apiGroup: authenticationGroup`. Only self-references
   use the bare-name form.
-- **Pin no guids and no canonical.** Identity belongs to the consumer's `xano.lock`
-  (fallback: `md5("<kind>:<name>")`). Don't add explicit `guid`/`canonical`.
-- **`@sidestep/core` is a `peerDependency` pinned to an exact version**, mirrored in
-  `devDependencies`. Never make it a regular dependency — one shared copy only.
+- **Pin no guids, and no canonical by default.** Identity belongs to the consumer's
+  `xano.lock` (fallback: `md5("<kind>:<name>")`). Never hard-code a `guid` or a
+  `canonical` in a def. The one exception is the opt-in
+  `registerAuth(xano, { canonical })`, which the *consumer* supplies so a browser
+  can resolve `getPath()` without a lock — the package itself still pins nothing.
+- **`@sidestep/core` is a `peerDependency` with a caret range against the stable
+  major**, mirrored in `devDependencies` at the version actually tested. Never make
+  it a regular dependency — one shared copy only. The golden-bundle test only
+  exercises the *installed* version, so the rest of the peer range is declared but
+  unverified; widen the range only when you mean it, and keep the README's install
+  note pointing at the tested version.
 
 ## The golden-bundle contract
 

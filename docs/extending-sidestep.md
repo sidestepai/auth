@@ -113,10 +113,12 @@ changes encoding, this test fails before consumers are affected.
 ## Packaging and publishing [reusable]
 
 - ESM-only (`"type": "module"`), `tsup` build (esm + dts), `files: ["dist", "README.md"]`.
-- `sidestep` in **both** `peerDependencies` (a `^1.0.0` caret range against the
-  stable major the golden fixture was generated against) and `devDependencies`
-  (for tests). The golden-bundle test is the safety net: any minor/patch that
-  actually changes encoding fails it before consumers are affected.
+- `sidestep` in **both** `peerDependencies` (a `^2.4.0` caret range against the
+  stable major) and `devDependencies` (pinned at the version the golden fixture
+  was actually generated against). The golden-bundle test is the safety net: any
+  minor/patch that changes encoding fails it before consumers are affected — but
+  only for the *installed* version, so keep the README's "tested against" note
+  current, and add a CI matrix if the declared floor needs real coverage.
 - Regenerate + review the golden fixture whenever you bump the tested sidestep
   version, then `npm publish`.
 - The README install command stays version-free (`npm install @sidestep/core`) —

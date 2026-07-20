@@ -10,6 +10,7 @@ import { query, input, s, expr, ref, inp, c } from "@sidestep/core";
 import { userTable } from "../tables/user.js";
 import { createEventLogFn } from "../functions/create-event-log.js";
 import { authenticationGroup } from "./authentication-group.js";
+import type { AuthTokenResponse } from "./types.js";
 
 export const signupQuery = query({
   name: "auth/signup",
@@ -64,4 +65,7 @@ export const signupQuery = query({
     }),
   ],
   response: { authToken: ref("authToken"), user_id: ref("user.id") },
+  // `authToken` is minted by a statement, so the static walk resolves both
+  // values to `unknown`; declare the shape once for consumers.
+  responseShape: {} as AuthTokenResponse,
 });

@@ -7,7 +7,7 @@
  * `id` / `created_at` and the `primary(id)` / `btree(created_at desc)` indexes
  * are the engine's system defaults — auto-injected, not declared here.
  */
-import { table, f } from "@sidestep/core";
+import { table, f, type InferRow } from "@sidestep/core";
 import { accountTable } from "./account.js";
 
 export const userTable = table({
@@ -44,3 +44,29 @@ export const userTable = table({
   },
   index: [{ type: "btree|unique", fields: [{ name: "email", op: "asc" }] }],
 });
+
+/** The full `user` row, including the `internal`-access `password` hash. */
+export type User = InferRow<typeof userTable>;
+
+/**
+ * The columns `auth/me` selects — the single source of truth for that
+ * statement's `output` array and for {@link PublicUser}, so the two cannot
+ * drift. `auth/login` deliberately reads a *different* list (it adds `password`
+ * for the hash check) and returns no user object at all, so it keeps its own
+ * literal.
+ */
+export const PUBLIC_USER_FIELDS = [
+  "id",
+  "created_at",
+  "name",
+  "email",
+  "account_id",
+  "role",
+] as const satisfies readonly (keyof User)[];
+
+/**
+ * The user projection `auth/me` hands back: {@link PUBLIC_USER_FIELDS}, which
+ * excludes the password hash. Derived from that array, so editing the `output`
+ * list in `api/me.ts` changes this type too.
+ */
+export type PublicUser = Pick<User, (typeof PUBLIC_USER_FIELDS)[number]>;
