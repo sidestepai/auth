@@ -19,15 +19,25 @@ to `registerAuth` — otherwise identity comes from the consuming project's
 npm install @sidestep/auth @sidestep/core
 ```
 
-`@sidestep/core` is a `^3.9.25` peer dependency — install the current stable
-release. Built and tested against 3.9.27. The golden-bundle test in this package
-is the peer-drift tripwire: if a core upgrade changes encoding, it fails here
-before consumers are affected (for the installed version — the rest of the caret
+`@sidestep/core` is a `>=3.9.25 <5.0.0` peer dependency — install the current
+stable release. Built and tested against 4.1.2. The golden-bundle test in this
+package is the peer-drift tripwire: if a core upgrade changes encoding, it fails
+here before consumers are affected (for the installed version — the rest of the
 range is declared, not CI-verified). The floor is 3.9.25, not the tested version:
 it is the oldest core whose *types* this package needs (`auth/me`'s response is
-derived from its stack, which needs core's miss-to-null handling for `db.get`),
-and it runs green against this same source. The encoded bundle itself is
-byte-identical all the way back to the 3.0.0 build.
+derived from its stack, which needs core's miss-to-null handling for `db.get`).
+It is verified, not asserted — against this same source, 3.9.25 typechecks clean
+and the whole suite passes except the golden fixture, which tracks the installed
+core's encoding rather than the defs.
+
+The range deliberately spans a major rather than using a caret. sidestep 4.0.0
+broke only the CLI's deploy surface (`sandbox deploy` → `deploy` + ephemeral
+environments, `release`, `ephemeral`); the def-authoring API is untouched and no
+4.x type is load-bearing here, so both 3.9.x and 4.x consumers are supported.
+The defs themselves encode byte-identically all the way back to the 3.0.0 build
+— the one bundle difference in 4.x is core's own addition of a name-derived
+`guid` on the workspace object, so the committed fixture matches every 4.x core
+and differs from a 3.9.x one by exactly that field.
 
 ## Quickstart
 

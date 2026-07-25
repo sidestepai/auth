@@ -23,23 +23,40 @@ both.
 npm install @sidestep/auth @sidestep/core
 ```
 
-sidestep is a `^3.9.25` peer dependency — install the current stable release.
-This package is built and tested against **3.9.27**; the golden-bundle test is
-the peer-drift tripwire, but it only ever exercises the installed version, so
-the rest of the declared range is supported-by-caret rather than verified in CI.
+sidestep is a `>=3.9.25 <5.0.0` peer dependency — install the current stable
+release. This package is built and tested against **4.1.2**; the golden-bundle
+test is the peer-drift tripwire, but it only ever exercises the installed
+version, so the rest of the declared range is supported-by-range rather than
+verified in CI.
 
 The floor is `3.9.25` rather than `3.0.0` because `auth/me`'s response type is
 *derived* from its stack instead of hand-declared, and that derivation needs
 core's miss-to-null handling for `db.get` (issue #105). On an older 3.x the defs
-still encode to the identical bundle — every emitted byte is unchanged from the
+still encode identically — every byte these defs emit is unchanged from the
 3.0.0 build — but `InferResponse<typeof meQuery>` would silently lose its
 `| null`, which is exactly the kind of quiet type regression a peer floor exists
 to prevent.
 
-The floor sits below the tested version on purpose: 3.9.25 is the oldest core
-this package's *types* need, and it has been run green against this exact source,
-so it is a verified minimum rather than a declared one. Nothing in 3.9.26/3.9.27
-changed anything these defs touch.
+The range spans a major on purpose, and is not a caret. sidestep 4.0.0's
+breaking changes are entirely in the CLI's deploy surface (`sandbox deploy`
+became `deploy` with ephemeral environments, plus `release` and `ephemeral`) —
+the def-authoring API this package builds on is untouched, and no 4.x type
+became load-bearing here. So the floor stays at the oldest core whose *types*
+this package needs, while the upper bound just excludes a 5.x nobody has seen
+yet. A `^4.1.2` caret would have locked out perfectly good 3.9.x consumers for
+no reason; a `^3.9.25` caret would have locked out core 4 the same way.
+
+That floor is verified rather than asserted: against this exact source, core
+3.9.25 typechecks clean and the whole suite passes except the golden-bundle
+fixture, which tracks the *installed* core's encoding (see below) rather than
+the defs.
+
+One 4.x encoding change does reach the bundle, and it is not this package's:
+core now emits a `guid` on the workspace object itself, derived from the
+workspace name (`md5("workspace:<name>")`) like every other unpinned identity.
+Nothing in the defs moved — no def guid, auth flag, stack order, or output list
+differs from the 3.9.27 build. So the committed fixture matches every 4.x core,
+and differs from a 3.9.x one by exactly that field.
 
 ## Quickstart
 
