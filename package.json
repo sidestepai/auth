@@ -1,6 +1,6 @@
 {
   "name": "@sidestep/auth",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Plug-and-play Xano authentication (signup/login/me + user, account, event_log tables) as typed sidestep defs — the reference sidestep extension package.",
   "type": "module",
   "license": "MIT",
@@ -53,11 +53,11 @@
     "node": ">=20"
   },
   "peerDependencies": {
-    "@sidestep/core": "^3.0.0"
+    "@sidestep/core": "^3.9.25"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@sidestep/core": "^3.0.0",
+    "@sidestep/core": "^3.9.27",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",

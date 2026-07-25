@@ -5,22 +5,23 @@
  * whose user row was deleted is left to fall through the stack; and even this
  * read endpoint writes an `event_log` row.
  *
- * UNVERIFIED — the exact deleted-user outcome has not been checked against a
- * live instance. The template implies a null body with HTTP 200, but the very
- * next statement calls `createEventLogFn`, whose `user_id`/`account_id` inputs
- * are `required: true` and would receive null on that path, so an input-
- * validation error is at least as likely. `responseShape` widens to
- * `PublicUser | null` either way: both outcomes mean a caller must not assume a
- * row came back. Confirm against a real instance before documenting a status
- * code, and do not "fix" the missing precondition without a stated reason — the
- * port's fidelity is the point.
+ * The deleted-user path most likely errors rather than returning a null body.
+ * `db.get` binds null on a miss, and the next statement drills `ref("user.id")`
+ * into it — core documents a dotted ref through a null base as a runtime
+ * "Unable to locate var" (HTTP 500), not a null (core issue #47). Even past
+ * that, `createEventLogFn`'s `user_id`/`account_id` inputs are `required: true`.
+ * Still UNVERIFIED against a live instance, and it does not change the type:
+ * the response stays `PublicUser | null`, so a caller cannot assume a row came
+ * back. Do not "fix" the missing precondition (nor reach for
+ * `ref(..., { safe: true })`) without a stated reason — the port's fidelity is
+ * the point.
  *
  * `auth` names the ported `user` table by def handle (core >= 3.0.0 takes the
  * auth table itself, not `true`), so it resolves to that table's guid no matter
  * how many other auth tables the consumer registers.
  */
 import { query, s, ref, auth, c } from "@sidestep/core";
-import { userTable, PUBLIC_USER_FIELDS, type PublicUser } from "../tables/user.js";
+import { userTable, PUBLIC_USER_FIELDS } from "../tables/user.js";
 import { createEventLogFn } from "../functions/create-event-log.js";
 import { authenticationGroup } from "./authentication-group.js";
 
@@ -54,9 +55,10 @@ export const meQuery = query({
     }),
   ],
   response: ref("user"),
-  // The static walk derives the `output` projection but assumes the row exists.
-  // This endpoint has no null-user precondition (see the header note), so the
-  // deleted-user path is not guaranteed to produce a user — widen to match, so
-  // callers are forced to handle its absence rather than trusting a bare row.
-  responseShape: null as PublicUser | null,
+  // No `responseShape`: core's static walk derives this one exactly. It narrows
+  // the row to the `output` projection *and* carries `db.get`'s miss-to-null
+  // (core issue #105 — the reason the peer floor is 3.9.25), so it is already
+  // `PublicUser | null` — the same contract a declaration would state, but
+  // sourced from the stack, so editing `output` moves the consumer type with it.
+  // Re-declaring it here would only override derivation and let the two drift.
 });

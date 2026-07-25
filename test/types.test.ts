@@ -10,6 +10,8 @@
  * against `InferResponse<Omit<typeof q, "responseShape">>` — the derived result.
  * Comparing `InferResponse<typeof q>` to the declaration, or `PublicUser` to its
  * own `Pick<>`, restates a definition against itself and can never fail.
+ * `auth/me` declares no shape, so it needs no such stripping — its assertions
+ * read derivation directly.
  */
 import { describe, it, expectTypeOf } from "vitest";
 import type { InferInput, InferResponse, InferRow } from "@sidestep/core";
@@ -35,12 +37,12 @@ describe("row types", () => {
 
   it("PublicUser is exactly what auth/me's stack projects", () => {
     // The load-bearing assertion: compare against the response the static walk
-    // derives from `me`'s `output` array, with the declared `responseShape`
-    // stripped so derivation is what's actually being tested. Dropping a column
-    // from `api/me.ts` fails here. (Asserting against `Pick<User, "id" | ...>`
-    // would be a verbatim restatement of PublicUser's definition — a tautology
-    // that passes no matter how far the type has drifted from the query.)
-    expectTypeOf<InferResponse<Omit<typeof meQuery, "responseShape">>>().toEqualTypeOf<PublicUser>();
+    // derives from `me`'s `output` array. `meQuery` declares no `responseShape`,
+    // so this reads derivation with nothing to strip. Dropping a column from
+    // `api/me.ts` fails here. (Asserting against `Pick<User, "id" | ...>` would
+    // be a verbatim restatement of PublicUser's definition — a tautology that
+    // passes no matter how far the type has drifted from the query.)
+    expectTypeOf<NonNullable<InferResponse<typeof meQuery>>>().toEqualTypeOf<PublicUser>();
     expectTypeOf<PublicUser>().not.toHaveProperty("password");
     expectTypeOf<PublicUser>().not.toHaveProperty("password_reset");
   });
@@ -75,8 +77,12 @@ describe("response types", () => {
     >().toEqualTypeOf<keyof AuthTokenResponse>();
   });
 
-  it("me is nullable — a valid token for a deleted row returns a null body", () => {
+  it("me is nullable — a valid token whose user row is gone yields no user", () => {
+    // Derived, not declared: core carries `db.get`'s miss-to-null through the
+    // static walk, so the `| null` a caller must handle comes straight from the
+    // stack. A core regression that drops it (or an `output` edit) fails here.
     expectTypeOf<InferResponse<typeof meQuery>>().toEqualTypeOf<PublicUser | null>();
+    expectTypeOf<InferResponse<typeof meQuery>>().not.toEqualTypeOf<PublicUser>();
   });
 });
 
