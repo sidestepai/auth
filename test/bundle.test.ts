@@ -8,18 +8,23 @@
  *
  * This is the tripwire that catches upstream sidestep encoding drift when the
  * peer dependency is bumped.
+ *
+ * How the bundle is built and serialized lives in `./golden.ts`, shared with
+ * `scripts/regen-golden.ts` (`npm run fixture:regen`), so what this test
+ * asserts and what that script writes cannot drift apart.
  */
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { Xano } from "@sidestep/core";
-import { registerAuth } from "../src/index.js";
+import {
+  GOLDEN_FIXTURE_URL,
+  buildGoldenBundle,
+  serializeGoldenBundle,
+} from "./golden.js";
 
-const golden = JSON.parse(
-  readFileSync(new URL("./fixtures/golden-bundle.json", import.meta.url), "utf8"),
-);
+const goldenText = readFileSync(GOLDEN_FIXTURE_URL, "utf8");
+const golden = JSON.parse(goldenText);
 
-const exportBundle = () =>
-  registerAuth(new Xano().registerWorkspace({ name: "xts-auth-golden" })).export() as any;
+const exportBundle = () => buildGoldenBundle() as any;
 
 describe("golden bundle", () => {
   it("the exported bundle deep-equals the committed fixture, signature included", () => {
@@ -28,6 +33,14 @@ describe("golden bundle", () => {
 
   it("export is deterministic across instances", () => {
     expect(JSON.stringify(exportBundle())).toBe(JSON.stringify(exportBundle()));
+  });
+
+  it("the committed fixture is byte-for-byte what `npm run fixture:regen` writes", () => {
+    // Pins the regeneration contract itself: the deep-equal above would still
+    // pass if the fixture were committed with different formatting than the
+    // script emits, leaving `fixture:regen` to produce a spurious whitespace
+    // diff on the next core bump and obscuring the real drift underneath it.
+    expect(goldenText).toBe(serializeGoldenBundle(buildGoldenBundle()));
   });
 
   it("every guid referenced by a statement or binding resolves to a payload object", () => {

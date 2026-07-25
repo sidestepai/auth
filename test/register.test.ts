@@ -82,6 +82,39 @@ describe("registerAuth (turnkey install)", () => {
   });
 });
 
+describe("request-history opt-out (the documented production mitigation)", () => {
+  type HistoryBundle = {
+    payload: {
+      app: Array<{ history: { inherit: boolean; query_enabled: boolean } }>;
+      query: Array<{ name: string; history: { inherit: boolean } }>;
+    };
+  };
+
+  it("ships the engine default — every query inherits, nothing declared", () => {
+    // Faithful to the template, which sets no history anywhere. The hazard this
+    // leaves (plaintext signup/login bodies in request history) is documented in
+    // the README rather than silently fixed here.
+    const bundle = registerAuth(freshInstance()).export() as unknown as HistoryBundle;
+    expect(bundle.payload.app[0]?.history.inherit).toBe(true);
+    for (const q of bundle.payload.query) expect(q.history.inherit).toBe(true);
+  });
+
+  it("turning it off on the group covers all three queries by inheritance", () => {
+    // The one-liner the README tells consumers to use. Asserted here because a
+    // core change to history inheritance would otherwise break that advice
+    // silently — the queries must keep inheriting for the group pin to reach
+    // them. `test/setup.ts` clears the field afterwards; the group def is a
+    // process-wide singleton, like `canonical`.
+    authenticationGroup.history = false;
+    const bundle = registerAuth(freshInstance()).export() as unknown as HistoryBundle;
+    expect(bundle.payload.app[0]?.history).toMatchObject({
+      inherit: false,
+      query_enabled: false,
+    });
+    for (const q of bundle.payload.query) expect(q.history.inherit).toBe(true);
+  });
+});
+
 describe("consumer workspace with use_xdo:true", () => {
   it("does not flip the user table's storage mode", () => {
     type Dbo = { name: string; use_xdo: boolean; index: Array<{ type: string }> };

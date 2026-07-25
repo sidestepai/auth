@@ -19,11 +19,25 @@ to `registerAuth` — otherwise identity comes from the consuming project's
 npm install @sidestep/auth @sidestep/core
 ```
 
-`@sidestep/core` is a `^3.0.0` peer dependency — install the current stable
-release. Built and tested against 3.0.0. The golden-bundle test in this package
-is the peer-drift tripwire: if a core upgrade changes encoding, it fails here
-before consumers are affected (for the installed version — the rest of the caret
-range is declared, not CI-verified).
+`@sidestep/core` is a `>=3.9.25 <5.0.0` peer dependency — install the current
+stable release. Built and tested against 4.1.2. The golden-bundle test in this
+package is the peer-drift tripwire: if a core upgrade changes encoding, it fails
+here before consumers are affected (for the installed version — the rest of the
+range is declared, not CI-verified). The floor is 3.9.25, not the tested version:
+it is the oldest core whose *types* this package needs (`auth/me`'s response is
+derived from its stack, which needs core's miss-to-null handling for `db.get`).
+It is verified, not asserted — against this same source, 3.9.25 typechecks clean
+and the whole suite passes except the golden fixture, which tracks the installed
+core's encoding rather than the defs.
+
+The range deliberately spans a major rather than using a caret. sidestep 4.0.0
+broke only the CLI's deploy surface (`sandbox deploy` → `deploy` + ephemeral
+environments, `release`, `ephemeral`); the def-authoring API is untouched and no
+4.x type is load-bearing here, so both 3.9.x and 4.x consumers are supported.
+The defs themselves encode byte-identically all the way back to the 3.0.0 build
+— the one bundle difference in 4.x is core's own addition of a name-derived
+`guid` on the workspace object, so the committed fixture matches every 4.x core
+and differs from a 3.9.x one by exactly that field.
 
 ## Quickstart
 
@@ -60,8 +74,8 @@ npx sidestep export   # → importable workspace bundle
 
 Every query carries its own route and payload types, so a frontend reuses the
 def instead of re-typing URLs and bodies. Request types are derived; all three
-responses are fully resolved — no `unknown` — but via hand-declared
-`responseShape`s, not derivation:
+responses are fully resolved — no `unknown` — `me` by derivation, `signup` and
+`login` by a hand-declared `responseShape`:
 
 ```ts
 // Evaluating the module that calls registerAuth is what pins the canonical;
@@ -85,11 +99,15 @@ const { authToken }: LoginOut = await res.json();
 ```
 
 `signup`/`login` declare `responseShape: AuthTokenResponse` because the token is
-minted by a statement (opaque to the static walk). `meQuery` declares
-`PublicUser | null` — the `| null` is the faithful-port quirk below, not an
-oversight, so callers are forced to handle a deleted-user token. A declared
-shape overrides derivation and is not cross-checked against the stack, so all
-three are a hand-maintained contract.
+minted by a statement (opaque to the static walk); a declared shape overrides
+derivation and is not cross-checked against the stack, so those two are a
+hand-maintained contract. `meQuery` declares **nothing** — core derives
+`PublicUser | null` from its stack, narrowing the `db.get` to the columns in
+`PUBLIC_USER_FIELDS` and carrying that statement's miss-to-null. The `| null` is
+the faithful-port quirk below surfacing in the type, not an oversight: callers
+are forced to handle a token whose user row is gone. Do not add a
+`responseShape` to `meQuery` — it would only let the declaration drift from the
+`output` list.
 
 **`getPath()` needs a canonical.** It builds `/api:<canonical>/<name>`, and by
 default this package pins none (identity is the consumer's lock). A canonical
@@ -123,11 +141,18 @@ needs `eventLogTable`). Never register a def twice.
   preserved on purpose. Notably:
   - `event_log.metadata` stores the full fetched user record **including the
     password hash** on signup/login. Treat `event_log` like `user`.
-  - Request history captures plaintext signup/login bodies and minted tokens —
-    disable history on the Authentication group before production.
+  - Request history captures plaintext signup/login bodies and minted tokens.
+    Turn it off in code before registering — `authenticationGroup.history =
+    false` (the three queries inherit from the group). Process-wide, like
+    `canonical`.
   - Every endpoint (including the `auth/me` GET) writes an `event_log` row; the
     table grows unbounded with no pruning.
-  - A valid token for a deleted user → `auth/me` returns a `null` body, HTTP 200.
+  - A valid token for a deleted user → `auth/me` yields no user. Typed
+    `PublicUser | null`; the runtime outcome is most likely a 500 (the stack
+    drills `user.id` out of a null `db.get`), not a 200 with a null body.
+  - `password` is taken as `input.text()`, never `input.password()` — the column
+    hashes on write, so an input-level hash would double-hash and break
+    `check_password` (core issue #109). Do not "tighten" it.
   - Tokens live 24h with no refresh or revocation.
 - **Identity is the consumer's lock, not this package.** Commit `xano.lock` to
   keep guids and the API URL stable across re-imports.

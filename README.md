@@ -23,10 +23,40 @@ both.
 npm install @sidestep/auth @sidestep/core
 ```
 
-sidestep is a `^3.0.0` peer dependency — install the current stable release. This
-package is built and tested against **3.0.0**; the golden-bundle test is the
-peer-drift tripwire, but it only ever exercises the installed version, so the
-rest of the declared range is supported-by-caret rather than verified in CI.
+sidestep is a `>=3.9.25 <5.0.0` peer dependency — install the current stable
+release. This package is built and tested against **4.1.2**; the golden-bundle
+test is the peer-drift tripwire, but it only ever exercises the installed
+version, so the rest of the declared range is supported-by-range rather than
+verified in CI.
+
+The floor is `3.9.25` rather than `3.0.0` because `auth/me`'s response type is
+*derived* from its stack instead of hand-declared, and that derivation needs
+core's miss-to-null handling for `db.get` (issue #105). On an older 3.x the defs
+still encode identically — every byte these defs emit is unchanged from the
+3.0.0 build — but `InferResponse<typeof meQuery>` would silently lose its
+`| null`, which is exactly the kind of quiet type regression a peer floor exists
+to prevent.
+
+The range spans a major on purpose, and is not a caret. sidestep 4.0.0's
+breaking changes are entirely in the CLI's deploy surface (`sandbox deploy`
+became `deploy` with ephemeral environments, plus `release` and `ephemeral`) —
+the def-authoring API this package builds on is untouched, and no 4.x type
+became load-bearing here. So the floor stays at the oldest core whose *types*
+this package needs, while the upper bound just excludes a 5.x nobody has seen
+yet. A `^4.1.2` caret would have locked out perfectly good 3.9.x consumers for
+no reason; a `^3.9.25` caret would have locked out core 4 the same way.
+
+That floor is verified rather than asserted: against this exact source, core
+3.9.25 typechecks clean and the whole suite passes except the golden-bundle
+fixture, which tracks the *installed* core's encoding (see below) rather than
+the defs.
+
+One 4.x encoding change does reach the bundle, and it is not this package's:
+core now emits a `guid` on the workspace object itself, derived from the
+workspace name (`md5("workspace:<name>")`) like every other unpinned identity.
+Nothing in the defs moved — no def guid, auth flag, stack order, or output list
+differs from the 3.9.27 build. So the committed fixture matches every 4.x core,
+and differs from a 3.9.x one by exactly that field.
 
 ## Quickstart
 
@@ -130,9 +160,8 @@ role }` (never `password`). Logs a `get_auth_user` event.
 Each query is a def that knows its own route, verb, request payload, and
 response shape, so the code that *calls* the API reuses the def instead of
 re-typing URLs and bodies. Nothing here is codegen. The *request* types are
-derived from each def and cannot drift; the three *response* types are
-hand-declared (see **Declared response shapes** below), because a static walk of
-the stack can't see through them.
+derived from each def and cannot drift; `auth/me`'s response is derived too,
+while `signup`/`login` hand-declare theirs (see **Response shapes** below).
 
 ```ts
 // Importing the module that calls registerAuth is what pins the canonical —
@@ -228,21 +257,25 @@ loginQuery.getPath();                            // → /api:<locked canonical>/
 Run `npx sidestep export --lock` once to mint the canonical and freeze it in
 `xano.lock`, then commit that file.
 
-### Declared response shapes
+### Response shapes
 
-All three responses are declared via `responseShape` rather than inferred,
-because a static walk of the stack can't see through them. A declared shape wins
-over derivation and the compiler does not cross-check it against the stack, so
-treat these as a hand-maintained contract:
-
-- **`signup` / `login`** → `AuthTokenResponse` (`{ authToken, user_id }`). The
-  token is minted by `security.create_auth_token`, so its type isn't readable
-  off a table. Without the declaration both values derive as `unknown`.
-- **`me`** → `PublicUser | null`. This endpoint has deliberately no null-user
-  precondition, so a token whose user row was deleted is not guaranteed to
-  produce a user; the `| null` forces callers to handle its absence. (The exact
-  outcome on that path — null body vs. an error from the `event_log` write — is
-  not yet verified against a live instance; see the note in `src/api/me.ts`.)
+- **`me`** → `PublicUser | null`, **derived** from the stack. Core's static walk
+  narrows the `db.get` to the columns in its `output` list and carries that
+  statement's miss-to-null, so the type and the selected columns move together —
+  edit the `output` and every consumer's type follows. Nothing is declared here,
+  so nothing can drift. The `| null` is the endpoint's deliberately missing
+  null-user precondition showing up in the type: a token whose user row was
+  deleted is not guaranteed to produce a user, so callers must handle its
+  absence. (What that path actually *does* — most likely a 500 rather than a
+  null body — is still unverified against a live instance; see the note in
+  `src/api/me.ts`.)
+- **`signup` / `login`** → `AuthTokenResponse` (`{ authToken, user_id }`),
+  **declared** via `responseShape`. The token is minted by
+  `security.create_auth_token`, so its type isn't readable off a table and
+  derivation gives `unknown`. A declared shape wins over derivation and the
+  compiler does not cross-check it against the stack, so these two are a
+  hand-maintained contract — the type tests pin the declared *keys* against the
+  keys the walk does see.
 
 `PublicUser` itself is derived from the exported `PUBLIC_USER_FIELDS` array,
 which is also the `output` list of `auth/me`'s read — so the type and the
@@ -264,11 +297,29 @@ preserved on purpose — changing them here would fork the template's behavior:
   defaults ON for query endpoints, so signup/login request bodies (plaintext
   passwords) and minted `authToken`s are captured in history. Disable history
   on the Authentication group, or scope who can read it, before production.
+  This package ships the engine default (the queries inherit), but you can turn
+  it off **in code** before registering — the queries inherit from the group, so
+  one line covers all three:
+
+  ```ts
+  import { workspace } from "@sidestep/core";
+  import { authenticationGroup, registerAuth } from "@sidestep/auth";
+
+  authenticationGroup.history = false;               // no capture for signup/login/me
+  export default registerAuth(workspace("my-app"));
+  ```
+
+  Like `canonical`, the group def is a process-wide singleton, so this applies
+  to every workspace built in the same process.
 - **Every endpoint writes an event-log row** — including the `auth/me` GET.
   The table grows unbounded; there is no pruning or retention mechanism. You
   own its lifecycle.
-- **Deleted user, valid token** → `auth/me` returns a `null` body with HTTP
-  200 (the source has no null-user guard). Null-check downstream.
+- **Deleted user, valid token** → `auth/me` does not return a user (the source
+  has no null-user guard). The response type is `PublicUser | null`, so
+  null-check downstream — but the runtime outcome is most likely an HTTP 500
+  rather than a 200 with a null body: the `db.get` binds null and the next
+  statement drills `user.id` out of it, which core documents as a runtime
+  "Unable to locate var" (issue #47). Unverified against a live instance.
 - **Tokens live 24h with no refresh or revocation.** Multiple valid tokens
   per user is normal; password changes don't invalidate existing tokens.
 - **Signup reveals account existence** ("already in use") — a deliberate
@@ -291,8 +342,9 @@ preserved on purpose — changing them here would fork the template's behavior:
 
 The exported bundle is covered by a byte-exact golden test. A sidestep peer bump
 that changes the encoded bundle fails this package's test suite before it can
-reach you — which is why the peer is pinned exactly and moved in lockstep with
-`@sidestep/auth` releases.
+reach you — which is why the peer floor moves in lockstep with `@sidestep/auth`
+releases, and only ever to a version this package has been rebuilt and retested
+against.
 
 ## License
 
