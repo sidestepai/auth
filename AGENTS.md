@@ -51,6 +51,13 @@ Run `npm run typecheck && npm run lint && npm test` before committing.
   *installed* version, so the rest of the peer range is declared but unverified;
   widen the range only when you mean it, and keep the README's and llms.txt's
   install notes pointing at both numbers.
+  **The dev pin is exact — no caret.** It is the single version the golden
+  fixture was generated against and the number the README and llms.txt claim as
+  tested, so a range there would let a fresh install silently drift onto an
+  untested core and turn a documented claim false. It also keeps a genuine
+  encoding change in a later 4.x arriving as a deliberate bump in this repo
+  rather than as a golden-test failure traceable to no commit. Only the *peer*
+  range spans versions.
   **The two numbers are allowed to differ, and usually should.** The dev pin is
   "what CI proved this release against" and moves on every core bump. The peer
   floor is "the oldest core whose **types** this package relies on" — currently
