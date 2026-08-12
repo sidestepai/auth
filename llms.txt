@@ -152,7 +152,7 @@ needs `eventLogTable`). Never register a def twice.
     drills `user.id` out of a null `db.get`), not a 200 with a null body.
   - `password` is taken as `input.text()`, never `input.password()` — the column
     hashes on write, so an input-level hash would double-hash and break
-    `check_password` (core issue #109). Do not "tighten" it.
+    `check_password`. Do not "tighten" it.
   - Tokens live 24h with no refresh or revocation.
 - **Identity is the consumer's lock, not this package.** Commit `xano.lock` to
   keep guids and the API URL stable across re-imports.

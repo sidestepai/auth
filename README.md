@@ -31,7 +31,7 @@ verified in CI.
 
 The floor is `3.9.25` rather than `3.0.0` because `auth/me`'s response type is
 *derived* from its stack instead of hand-declared, and that derivation needs
-core's miss-to-null handling for `db.get` (issue #105). On an older 3.x the defs
+core's miss-to-null handling for `db.get`. On an older 3.x the defs
 still encode identically — every byte these defs emit is unchanged from the
 3.0.0 build — but `InferResponse<typeof meQuery>` would silently lose its
 `| null`, which is exactly the kind of quiet type regression a peer floor exists
@@ -319,7 +319,7 @@ preserved on purpose — changing them here would fork the template's behavior:
   null-check downstream — but the runtime outcome is most likely an HTTP 500
   rather than a 200 with a null body: the `db.get` binds null and the next
   statement drills `user.id` out of it, which core documents as a runtime
-  "Unable to locate var" (issue #47). Unverified against a live instance.
+  "Unable to locate var". Unverified against a live instance.
 - **Tokens live 24h with no refresh or revocation.** Multiple valid tokens
   per user is normal; password changes don't invalidate existing tokens.
 - **Signup reveals account existence** ("already in use") — a deliberate
