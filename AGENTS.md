@@ -150,4 +150,26 @@ Lockstep with the peer. For each core bump:
    Treat a failure anywhere else as real drift and find out why; never wave one
    off as "wrong version".
 4. Update the install notes in `README.md` **and** `llms.txt` with both numbers
-   (floor and tested), then `npm run release:beta`.
+   (floor and tested).
+5. Ship it. A core bump is a **minor** here — 0.2.0 → 0.3.0 → 0.4.0 have been one
+   per peer bump — because the peer contract a consumer installs against changes
+   even when no export does.
+
+   ```bash
+   npm run release:beta    # prerelease: bumps, tags, publishes under `beta`
+   ```
+
+   `release:beta` does the whole dance itself (`npm version prerelease` bumps and
+   commits the tag, then publishes). **The stable path does not** — `npm run
+   release` only publishes, so the version bump and the git tag are yours:
+
+   ```bash
+   npm version minor -m "chore(release): %s"   # bumps package.json + tags vX.Y.Z
+   npm run release                             # prepublishOnly rebuilds dist/
+   git push --follow-tags
+   ```
+
+   Publish from a green tree on the default branch, after the PR merges — not
+   from the feature branch. `npm pack --dry-run` should show exactly 7 files
+   (`dist/` ×3, `README.md`, `llms.txt`, `LICENSE`, `package.json`); anything
+   else means `files` drifted.
