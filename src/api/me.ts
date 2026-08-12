@@ -8,8 +8,8 @@
  * The deleted-user path most likely errors rather than returning a null body.
  * `db.get` binds null on a miss, and the next statement drills `ref("user.id")`
  * into it — core documents a dotted ref through a null base as a runtime
- * "Unable to locate var" (HTTP 500), not a null. Even past
- * that, `createEventLogFn`'s `user_id`/`account_id` inputs are `required: true`.
+ * "Unable to locate var" (HTTP 500), not a null. Even past that,
+ * `createEventLogFn`'s `user_id`/`account_id` inputs are `required: true`.
  * Still UNVERIFIED against a live instance, and it does not change the type:
  * the response stays `PublicUser | null`, so a caller cannot assume a row came
  * back. Do not "fix" the missing precondition (nor reach for
@@ -57,8 +57,8 @@ export const meQuery = query({
   response: ref("user"),
   // No `responseShape`: core's static walk derives this one exactly. It narrows
   // the row to the `output` projection *and* carries `db.get`'s miss-to-null
-  // (the reason the peer floor is 3.9.25), so it is already
-  // `PublicUser | null` — the same contract a declaration would state, but
-  // sourced from the stack, so editing `output` moves the consumer type with it.
+  // (the reason the peer floor is 3.9.25), so it is already `PublicUser | null`
+  // — the same contract a declaration would state, but sourced from the stack,
+  // so editing `output` moves the consumer type with it.
   // Re-declaring it here would only override derivation and let the two drift.
 });
