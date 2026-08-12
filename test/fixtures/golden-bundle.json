@@ -9,12 +9,51 @@
       "description": "",
       "canonical": "",
       "use_xdo": false,
-      "preferences": {},
-      "realtime": {
-        "canonical": ""
+      "preferences": {
+        "allow_push": false,
+        "track_performance": true,
+        "use_internal_docs": false
       },
-      "env": {},
-      "settings": {},
+      "realtime": {
+        "hash": "",
+        "mode": "",
+        "enabled": false,
+        "channels": []
+      },
+      "documentation": {
+        "token": "",
+        "whitelist": {},
+        "require_token": false
+      },
+      "swagger": false,
+      "env": [],
+      "settings": {
+        "ai_enabled": false,
+        "ai_settings": {
+          "providers": {
+            "google": {
+              "model": "",
+              "api_key": ""
+            },
+            "openai": {
+              "model": "",
+              "api_key": ""
+            },
+            "anthropic": {
+              "model": "",
+              "api_key": ""
+            },
+            "azure-openai": {
+              "model": "",
+              "api_key": "",
+              "base_url": "",
+              "api_version": ""
+            }
+          },
+          "default_provider": "free"
+        },
+        "hide_xano_agent": false
+      },
       "guid": "c276d3f7c74505fd4c4b9ac52fae6f24"
     },
     "dbo": [
@@ -218,21 +257,21 @@
                 "name": "min",
                 "disabled": false,
                 "arg": [
-                  "8"
+                  8
                 ]
               },
               {
                 "name": "minAlpha",
                 "disabled": false,
                 "arg": [
-                  "1"
+                  1
                 ]
               },
               {
                 "name": "minDigit",
                 "disabled": false,
                 "arg": [
-                  "1"
+                  1
                 ]
               }
             ],
@@ -1627,15 +1666,6 @@
                 "ignore": false,
                 "expand": false,
                 "children": []
-              },
-              {
-                "name": "lock",
-                "value": "false",
-                "tag": "const:bool",
-                "filters": [],
-                "ignore": false,
-                "expand": false,
-                "children": []
               }
             ],
             "mocks": {},
@@ -1777,6 +1807,15 @@
             "addon": [],
             "input": [
               {
+                "name": "id",
+                "value": "user.id",
+                "tag": "var",
+                "filters": [],
+                "ignore": false,
+                "expand": false,
+                "children": []
+              },
+              {
                 "name": "dbtable",
                 "value": "efb558104909137dac95907814c26051",
                 "tag": "const",
@@ -1798,15 +1837,6 @@
                 "name": "expiration",
                 "value": "86400",
                 "tag": "const:int",
-                "filters": [],
-                "ignore": false,
-                "expand": false,
-                "children": []
-              },
-              {
-                "name": "id",
-                "value": "user.id",
-                "tag": "var",
                 "filters": [],
                 "ignore": false,
                 "expand": false,
@@ -2060,15 +2090,6 @@
                 "ignore": false,
                 "expand": false,
                 "children": []
-              },
-              {
-                "name": "lock",
-                "value": "false",
-                "tag": "const:bool",
-                "filters": [],
-                "ignore": false,
-                "expand": false,
-                "children": []
               }
             ],
             "mocks": {},
@@ -2256,6 +2277,15 @@
             "addon": [],
             "input": [
               {
+                "name": "id",
+                "value": "user.id",
+                "tag": "var",
+                "filters": [],
+                "ignore": false,
+                "expand": false,
+                "children": []
+              },
+              {
                 "name": "dbtable",
                 "value": "efb558104909137dac95907814c26051",
                 "tag": "const",
@@ -2277,15 +2307,6 @@
                 "name": "expiration",
                 "value": "86400",
                 "tag": "const:int",
-                "filters": [],
-                "ignore": false,
-                "expand": false,
-                "children": []
-              },
-              {
-                "name": "id",
-                "value": "user.id",
-                "tag": "var",
                 "filters": [],
                 "ignore": false,
                 "expand": false,
@@ -2443,15 +2464,6 @@
                 "name": "field_value",
                 "value": "id",
                 "tag": "auth",
-                "filters": [],
-                "ignore": false,
-                "expand": false,
-                "children": []
-              },
-              {
-                "name": "lock",
-                "value": "false",
-                "tag": "const:bool",
                 "filters": [],
                 "ignore": false,
                 "expand": false,
@@ -2617,6 +2629,10 @@
         "guid": "418bb3d99f5c721ab78c30d97d651e90"
       }
     ],
+    "realtime_server": [],
+    "channel": [],
+    "message": [],
+    "microservice": [],
     "vault": [],
     "market_item": [],
     "run_install": [],
@@ -2626,5 +2642,5 @@
     "service": [],
     "branch": []
   },
-  "sig": "9t4-ZI22Nq2coXTqjw-vGG_EQ4s."
+  "sig": "lNuK4AMigQDGw8y3h-S-ke84G_0."
 }

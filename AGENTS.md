@@ -89,6 +89,13 @@ Run `npm run typecheck && npm run lint && npm test` before committing.
   a leading null `id`), which the ported template does not. `row` is the better
   default in new code; here the `data` form is what keeps the bundle byte-faithful.
   Don't "modernize" it.
+  **Nor narrow them with `output`.** Core >= 4.1.x added `output` to `s.db.add`/`edit`,
+  which restricts the columns the statement binds. It is genuinely tempting on
+  `auth/signup`, whose `db.add` binds the full written row — password hash included —
+  and hands it to `event_log.metadata`. That quirk is the *source template's*, called
+  out in `api/signup.ts` and `tables/event-log.ts` and reproduced on purpose; narrowing
+  it would change what a consumer's audit rows contain. Declined deliberately, not
+  overlooked.
 - **Values stay explicit `c.*`, never bare literals.** Core >= 3.9.27 coerces raw
   literals inside a call/agent `input` map (`input: { action: "login" }` in place of
   `c.text("login")`) and auto-wraps a nested plain object in a record response.
@@ -133,8 +140,36 @@ Lockstep with the peer. For each core bump:
    When moving the floor, verify it rather than asserting it: install the floor
    version, and confirm `npx tsc --noEmit` and the non-bundle suite pass against
    it. The golden test tracks the *encoding*, not the version, so it passes on
-   every core that encodes identically — currently all of 4.x — and fails below
-   4.0.0 only because of the workspace guid. Treat a failure anywhere else as
-   real drift and find out why; never wave one off as "wrong version".
+   every core that encodes identically — **currently `>=4.1.24`**, bisected
+   against the committed fixture — and fails below that on core-side encoding
+   changes alone (the workspace guid below 4.0.0; the workspace default blocks,
+   the new object-kind arrays, numeric `f.password` method args, the dropped
+   `db.get` `lock`, and the `create_auth_token` member order below 4.1.24 —
+   README has the itemized list). That boundary is a fact about the *fixture*, so
+   re-bisect it whenever you regenerate rather than copying the number forward.
+   Treat a failure anywhere else as real drift and find out why; never wave one
+   off as "wrong version".
 4. Update the install notes in `README.md` **and** `llms.txt` with both numbers
-   (floor and tested), then `npm run release:beta`.
+   (floor and tested).
+5. Ship it. A core bump is a **minor** here — 0.2.0 → 0.3.0 → 0.4.0 have been one
+   per peer bump — because the peer contract a consumer installs against changes
+   even when no export does.
+
+   ```bash
+   npm run release:beta    # prerelease: bumps, tags, publishes under `beta`
+   ```
+
+   `release:beta` does the whole dance itself (`npm version prerelease` bumps and
+   commits the tag, then publishes). **The stable path does not** — `npm run
+   release` only publishes, so the version bump and the git tag are yours:
+
+   ```bash
+   npm version minor -m "chore(release): %s"   # bumps package.json + tags vX.Y.Z
+   npm run release                             # prepublishOnly rebuilds dist/
+   git push --follow-tags
+   ```
+
+   Publish from a green tree on the default branch, after the PR merges — not
+   from the feature branch. `npm pack --dry-run` should show exactly 7 files
+   (`dist/` ×3, `README.md`, `llms.txt`, `LICENSE`, `package.json`); anything
+   else means `files` drifted.

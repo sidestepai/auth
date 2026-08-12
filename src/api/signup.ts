@@ -8,8 +8,8 @@
  *
  * `password` is an `input.text()` here for the same reason as in `auth/login`:
  * the `f.password` column hashes on write, so hashing again at the input would
- * store a hash-of-a-hash that `check_password` could never match (core issue
- * #109). See the note in `api/login.ts`.
+ * store a hash-of-a-hash that `check_password` could never match. See the note
+ * in `api/login.ts`.
  */
 import { query, input, s, expr, ref, inp, c } from "@sidestep/core";
 import { userTable } from "../tables/user.js";

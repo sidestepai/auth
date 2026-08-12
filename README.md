@@ -24,14 +24,14 @@ npm install @sidestep/auth @sidestep/core
 ```
 
 sidestep is a `>=3.9.25 <5.0.0` peer dependency — install the current stable
-release. This package is built and tested against **4.1.2**; the golden-bundle
+release. This package is built and tested against **4.1.37**; the golden-bundle
 test is the peer-drift tripwire, but it only ever exercises the installed
 version, so the rest of the declared range is supported-by-range rather than
 verified in CI.
 
 The floor is `3.9.25` rather than `3.0.0` because `auth/me`'s response type is
 *derived* from its stack instead of hand-declared, and that derivation needs
-core's miss-to-null handling for `db.get` (issue #105). On an older 3.x the defs
+core's miss-to-null handling for `db.get`. On an older 3.x the defs
 still encode identically — every byte these defs emit is unchanged from the
 3.0.0 build — but `InferResponse<typeof meQuery>` would silently lose its
 `| null`, which is exactly the kind of quiet type regression a peer floor exists
@@ -43,7 +43,7 @@ became `deploy` with ephemeral environments, plus `release` and `ephemeral`) —
 the def-authoring API this package builds on is untouched, and no 4.x type
 became load-bearing here. So the floor stays at the oldest core whose *types*
 this package needs, while the upper bound just excludes a 5.x nobody has seen
-yet. A `^4.1.2` caret would have locked out perfectly good 3.9.x consumers for
+yet. A `^4.1.37` caret would have locked out perfectly good 3.9.x consumers for
 no reason; a `^3.9.25` caret would have locked out core 4 the same way.
 
 That floor is verified rather than asserted: against this exact source, core
@@ -51,12 +51,28 @@ That floor is verified rather than asserted: against this exact source, core
 fixture, which tracks the *installed* core's encoding (see below) rather than
 the defs.
 
-One 4.x encoding change does reach the bundle, and it is not this package's:
-core now emits a `guid` on the workspace object itself, derived from the
-workspace name (`md5("workspace:<name>")`) like every other unpinned identity.
-Nothing in the defs moved — no def guid, auth flag, stack order, or output list
-differs from the 3.9.27 build. So the committed fixture matches every 4.x core,
-and differs from a 3.9.x one by exactly that field.
+Several core-side encoding changes reach the bundle across 4.x, and none of them
+are this package's. **The committed fixture matches core `>=4.1.24`** — verified
+by bisection, not asserted — and differs from anything below that. Nothing in the
+defs moved at any point: no def guid, auth flag, stack order, or output list
+differs from the 3.9.27 build.
+
+What changed, and where:
+
+- **4.0.0** — core emits a `guid` on the workspace object itself, derived from
+  the workspace name (`md5("workspace:<name>")`) like every other unpinned
+  identity. This is the single field by which a 3.9.x bundle differs.
+- **through 4.1.24** — the workspace payload gained its full default blocks
+  (`preferences`, `documentation`, `swagger`, `settings`; `env` became an array
+  and `realtime` was reshaped), four new object-kind arrays appeared at the
+  bundle root (`realtime_server`, `channel`, `message`, `microservice`, all empty
+  here), `f.password`'s method arguments became numbers rather than strings
+  (`min:8` → `8`, matching the `int` the engine's own schema declares), `db.get`
+  stopped emitting its default `lock: false`, and the member order inside
+  `create_auth_token` shifted.
+
+So a golden-bundle failure on a core below 4.1.24 is expected and explained. A
+failure anywhere else is real drift — find out why rather than regenerating.
 
 ## Quickstart
 
@@ -319,7 +335,7 @@ preserved on purpose — changing them here would fork the template's behavior:
   null-check downstream — but the runtime outcome is most likely an HTTP 500
   rather than a 200 with a null body: the `db.get` binds null and the next
   statement drills `user.id` out of it, which core documents as a runtime
-  "Unable to locate var" (issue #47). Unverified against a live instance.
+  "Unable to locate var". Unverified against a live instance.
 - **Tokens live 24h with no refresh or revocation.** Multiple valid tokens
   per user is normal; password changes don't invalidate existing tokens.
 - **Signup reveals account existence** ("already in use") — a deliberate

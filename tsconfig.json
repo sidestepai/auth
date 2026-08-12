@@ -12,7 +12,16 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": false,
-    "declaration": true,
+    // Off deliberately — do not turn this back on. `tsc` runs here only as
+    // `--noEmit` (the `typecheck` script); the published `dist/index.d.ts` comes
+    // from tsup's dts rollup, which INLINES the core types and emits a
+    // self-contained file. Since core 4.1.7 those types are re-exported from an
+    // internal chunk (`@sidestep/core/dist/response-*.d.ts`) that the package's
+    // `exports` map does not expose, so a declaration-emitting `tsc` cannot name
+    // the inferred type of any def and raises TS2742 on all four. Annotating the
+    // defs to satisfy it would erase the inference that IS the contract here —
+    // `auth/me`'s derived `PublicUser | null` most of all.
+    "declaration": false,
     "sourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

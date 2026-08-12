@@ -9,8 +9,9 @@
  * `password` is an `input.text()`, NOT `input.password()` — do not "tighten" it.
  * The `f.password` column hashes on write and `input.password` would hash the
  * submission again on bind, so `check_password` would compare two different
- * hashes and every correct password would fail (core issue #109). The statement
- * does the comparison hash itself; it needs the plaintext.
+ * hashes and every correct password would fail. The statement does the
+ * comparison hash itself; it needs the plaintext. (Core's own Gotchas document
+ * this trap.)
  */
 import { query, input, s, expr, ref, inp, c } from "@sidestep/core";
 import { userTable } from "../tables/user.js";
