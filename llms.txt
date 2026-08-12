@@ -20,7 +20,7 @@ npm install @sidestep/auth @sidestep/core
 ```
 
 `@sidestep/core` is a `>=3.9.25 <5.0.0` peer dependency — install the current
-stable release. Built and tested against 4.1.2. The golden-bundle test in this
+stable release. Built and tested against 4.1.37. The golden-bundle test in this
 package is the peer-drift tripwire: if a core upgrade changes encoding, it fails
 here before consumers are affected (for the installed version — the rest of the
 range is declared, not CI-verified). The floor is 3.9.25, not the tested version:
@@ -34,10 +34,14 @@ The range deliberately spans a major rather than using a caret. sidestep 4.0.0
 broke only the CLI's deploy surface (`sandbox deploy` → `deploy` + ephemeral
 environments, `release`, `ephemeral`); the def-authoring API is untouched and no
 4.x type is load-bearing here, so both 3.9.x and 4.x consumers are supported.
-The defs themselves encode byte-identically all the way back to the 3.0.0 build
-— the one bundle difference in 4.x is core's own addition of a name-derived
-`guid` on the workspace object, so the committed fixture matches every 4.x core
-and differs from a 3.9.x one by exactly that field.
+The defs themselves encode byte-identically all the way back to the 3.0.0 build.
+The bundle differences across 4.x are all core's own: a name-derived `guid` on
+the workspace object (4.0.0), then the workspace payload's full default blocks,
+four new empty object-kind arrays, numeric `f.password` method arguments, a
+dropped `lock: false` on `db.get`, and a member reorder in `create_auth_token`
+(through 4.1.24). So the committed fixture matches core `>=4.1.24` — bisected,
+not asserted — and a golden-bundle failure below that version is expected and
+explained. A failure anywhere else is real drift.
 
 ## Quickstart
 

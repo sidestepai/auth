@@ -140,8 +140,14 @@ Lockstep with the peer. For each core bump:
    When moving the floor, verify it rather than asserting it: install the floor
    version, and confirm `npx tsc --noEmit` and the non-bundle suite pass against
    it. The golden test tracks the *encoding*, not the version, so it passes on
-   every core that encodes identically — currently all of 4.x — and fails below
-   4.0.0 only because of the workspace guid. Treat a failure anywhere else as
-   real drift and find out why; never wave one off as "wrong version".
+   every core that encodes identically — **currently `>=4.1.24`**, bisected
+   against the committed fixture — and fails below that on core-side encoding
+   changes alone (the workspace guid below 4.0.0; the workspace default blocks,
+   the new object-kind arrays, numeric `f.password` method args, the dropped
+   `db.get` `lock`, and the `create_auth_token` member order below 4.1.24 —
+   README has the itemized list). That boundary is a fact about the *fixture*, so
+   re-bisect it whenever you regenerate rather than copying the number forward.
+   Treat a failure anywhere else as real drift and find out why; never wave one
+   off as "wrong version".
 4. Update the install notes in `README.md` **and** `llms.txt` with both numbers
    (floor and tested), then `npm run release:beta`.

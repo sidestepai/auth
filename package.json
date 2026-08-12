@@ -1,6 +1,6 @@
 {
   "name": "@sidestep/auth",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Plug-and-play Xano authentication (signup/login/me + user, account, event_log tables) as typed sidestep defs — the reference sidestep extension package.",
   "type": "module",
   "license": "MIT",
