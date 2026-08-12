@@ -89,6 +89,13 @@ Run `npm run typecheck && npm run lint && npm test` before committing.
   a leading null `id`), which the ported template does not. `row` is the better
   default in new code; here the `data` form is what keeps the bundle byte-faithful.
   Don't "modernize" it.
+  **Nor narrow them with `output`.** Core >= 4.1.x added `output` to `s.db.add`/`edit`,
+  which restricts the columns the statement binds. It is genuinely tempting on
+  `auth/signup`, whose `db.add` binds the full written row — password hash included —
+  and hands it to `event_log.metadata`. That quirk is the *source template's*, called
+  out in `api/signup.ts` and `tables/event-log.ts` and reproduced on purpose; narrowing
+  it would change what a consumer's audit rows contain. Declined deliberately, not
+  overlooked.
 - **Values stay explicit `c.*`, never bare literals.** Core >= 3.9.27 coerces raw
   literals inside a call/agent `input` map (`input: { action: "login" }` in place of
   `c.text("login")`) and auto-wraps a nested plain object in a record response.
